@@ -20,17 +20,24 @@ class ApiService {
     }
   }
 
-  // Register a new applicant
-  static async registerUser(userData) {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/applicants/create`, userData);
-      return response.data;
-    } catch (error) {
-      console.error("Registration error:", error.response || error.message);
-      throw error;
-    }
-  }
+  
+  // Register a new user
 
+  // Register a new applicant
+static async registerUser(userData) {
+  try {
+    const url =
+      userData.role === "ADMIN"
+        ? `${API_BASE_URL}/admins/create`
+        : `${API_BASE_URL}/applicants/create`;
+
+    const response = await axios.post(url, userData);
+    return response.data;
+  } catch (error) {
+    console.error("Registration error:", error.response || error.message);
+    throw error;
+  }
+}
   // Login user
     // Login user
   static async loginUser(email, password) {
@@ -209,6 +216,31 @@ static async loginAdmin(email, password) {
     }
   }
 
+  // Fetch vehicles for a specific user
+static async getVehiclesByUser(userId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/vehicle/user/${userId}`);
+    // console.log("Fetched user vehicles:", userVehicles);
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user's vehicles:", error.response?.data || error.message);
+    throw error;
+  }
+}
+// Fetch expired vehicle discs for a specific user
+static async getExpiredVehiclesByUser(userId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/vehicle/expired/user/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching expired vehicles:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+
+
   // ------------------ APPLICANT STATUS ------------------
   static async updateApplicantStatus(id, { status, reason }) {
     try {
@@ -219,18 +251,6 @@ static async loginAdmin(email, password) {
       throw error;
     }
   }
-<<<<<<< HEAD
-  static async getUserBookings(userId) {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/test-appointments/by-applicant/${userId}`);
-    return { success: true, data: response.data };
-  } catch (error) {
-    console.error("Error fetching user bookings:", error.response?.data || error.message);
-    return { success: false, error: error.response?.data || error.message };
-  }
-}
-  
-=======
   // Fetch all vehicle discs
 static async getAllVehicleDiscs() {
   try {
@@ -254,7 +274,6 @@ static async getExpiredVehicles() {
   }
 }
 
->>>>>>> 5caf43bc6a79fcd80608c53cda3a50f346e8688c
 }
 
 

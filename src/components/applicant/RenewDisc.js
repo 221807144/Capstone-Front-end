@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { CreditCard, CheckCircle } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom"; // <- import useLocation
+import { CheckCircle } from "lucide-react";
 import SharedLayout from "../sharedPages/SharedLayout";
 import ApiService from "../../services/ApiService";
 
-export default function RenewDisc({ user }) {
+export default function RenewDisc({  }) {
   const navigate = useNavigate();
+  const location = useLocation();          // <- add this
+  const user = location.state?.user;   
+      // <- get user from navigation state
+
+       console.log("RenewDisc component mounted");
+  console.log("Received user:", user);
   const [vehicleList, setVehicleList] = useState([]);
   const [step, setStep] = useState(1);
   const [selectedVehicleIndex, setSelectedVehicleIndex] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-
+  
   const registrationFee = 850;
   const [paymentMethod, setPaymentMethod] = useState("");
   const [cardDetails, setCardDetails] = useState({
@@ -20,23 +26,38 @@ export default function RenewDisc({ user }) {
     cvv: "",
     cardholderName: "",
   });
-  const today = new Date();
 
+  // Helper to strip time from a date
+  const dateOnly = (date) => {
+    const d = new Date(date);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  // Fetch expired discs for logged-in user
   useEffect(() => {
+      if (!user?.userId) return;
+    console.log("useEffect triggered", user);
+
     const fetchExpired = async () => {
       try {
-        const data = await ApiService.getExpiredVehicles();
+        if (!user || !user.userId) return;
+        const data = await ApiService.getExpiredVehiclesByUser(user.userId);
+        console.log("Fetched vehicles:", data);
         setVehicleList(data);
       } catch (err) {
         console.error("Error fetching expired vehicles:", err);
       }
     };
     fetchExpired();
-  }, []);
+  }, [user]);
 
-  const expiredVehicles = vehicleList.filter(
-    (v) => v.vehicleDisc && new Date(v.vehicleDisc.expiryDate) < today
-  );
+  // // // Filter expired vehicles ignoring time
+  // // const expiredVehicles = vehicleList.filter(
+  // //   (v) => v.vehicleDisc?.expiryDate && dateOnly(v.vehicleDisc.expiryDate) <= dateOnly(new Date())
+  // );
+// No need to filter again
+const expiredVehicles = vehicleList; 
 
   const handleSelectVehicle = (index) => {
     setSelectedVehicleIndex(index);
@@ -52,7 +73,6 @@ export default function RenewDisc({ user }) {
   const handleRenew = async () => {
     if (selectedVehicleIndex === null) return;
 
-    // Validate payment
     if (!paymentMethod) {
       setError("Please select a payment method");
       return;
@@ -96,14 +116,13 @@ export default function RenewDisc({ user }) {
     const updatedVehicles = [...vehicleList];
     const vehicle = updatedVehicles[selectedVehicleIndex];
 
-    // Calculate new expiry date (1 year)
     const newExpiry = new Date();
     newExpiry.setFullYear(newExpiry.getFullYear() + 1);
 
     try {
       await ApiService.createVehicleDisc({
         discId: vehicle.vehicleDisc.discId,
-        issueDate: today.toISOString().split("T")[0],
+        issueDate: new Date().toISOString().split("T")[0],
         expiryDate: newExpiry.toISOString().split("T")[0],
         paymentMethod,
         cardDetails: paymentMethod === "Card" ? cardDetails : null,
@@ -143,9 +162,7 @@ export default function RenewDisc({ user }) {
                           <p>
                             Expired on:{" "}
                             <span className="text-danger">
-                              {new Date(
-                                vehicle.vehicleDisc.expiryDate
-                              ).toLocaleDateString()}
+                              {new Date(vehicle.vehicleDisc.expiryDate).toLocaleDateString()}
                             </span>
                           </p>
                           <button
@@ -169,9 +186,7 @@ export default function RenewDisc({ user }) {
                 <p>Registration Fee: R {registrationFee}</p>
                 <p>
                   Current Expiry Date:{" "}
-                  {new Date(
-                    vehicleList[selectedVehicleIndex].vehicleDisc.expiryDate
-                  ).toLocaleDateString()}
+                  {new Date(vehicleList[selectedVehicleIndex].vehicleDisc.expiryDate).toLocaleDateString()}
                 </p>
 
                 <div className="mb-3">
@@ -257,14 +272,9 @@ export default function RenewDisc({ user }) {
             <h3 className="mt-3">🎉 Disc Renewed Successfully!</h3>
             <p>
               Your vehicle disc is now valid until{" "}
-              {new Date(
-                vehicleList[selectedVehicleIndex].vehicleDisc.expiryDate
-              ).toLocaleDateString()}
+              {new Date(vehicleList[selectedVehicleIndex].vehicleDisc.expiryDate).toLocaleDateString()}
             </p>
-            <button
-              className="btn btn-primary mt-3"
-              onClick={() => navigate("/vehicle-disc")}
-            >
+            <button className="btn btn-primary mt-3" onClick={() => navigate("/vehicle-disc")}>
               View Disc
             </button>
           </div>

@@ -29,24 +29,32 @@ function VehicleRegistration({ user, onClose, onComplete }) {
     cardholderName: "",
   });
 
+const dateOnly = (date) => {  // made changes
+  const d = new Date(date);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+};
+
   const registrationFee = 850;
   const issueDate = new Date();
   const vehicleYear = parseInt(formData.vehicleYear, 10);
   let expiryDate;
 
-  if (!isNaN(vehicleYear)) {
-    if (vehicleYear <= 2023) {
-      expiryDate = new Date(issueDate.getTime() + 2 * 60 * 1000); // 2 minutes
-    } else if (vehicleYear >= 2024 && vehicleYear <= 2026) {
-      expiryDate = new Date(issueDate);
-      expiryDate.setFullYear(issueDate.getFullYear() + 1); // 1 year
-    } else {
-      expiryDate = new Date(issueDate);
-      expiryDate.setFullYear(issueDate.getFullYear() + 1); // fallback 1 year
-    }
+  if (!isNaN(vehicleYear)) {  // made changes
+  if (vehicleYear <= 2023) {
+    expiryDate = dateOnly(new Date(issueDate.getTime() + 2 * 60 * 1000)); // demo
+  } else if (vehicleYear >= 2024 && vehicleYear <= 2026) {
+    const temp = new Date(issueDate);
+    temp.setFullYear(temp.getFullYear() + 1);
+    expiryDate = dateOnly(temp); // strip time
   } else {
-    expiryDate = new Date(issueDate); // default if no year chosen yet
+    const temp = new Date(issueDate);
+    temp.setFullYear(temp.getFullYear() + 1);
+    expiryDate = dateOnly(temp);
   }
+} else {
+  expiryDate = dateOnly(issueDate);
+}
+
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
