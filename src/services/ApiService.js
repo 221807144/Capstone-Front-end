@@ -6,17 +6,26 @@ class ApiService {
   // Create Test Appointment
 
   // Create a new test appointment
-  static async createTestAppointment(appointmentData) {
+   static async createTestAppointment(appointmentData) {
     try {
       const response = await axios.post(
         `${API_BASE_URL}/test-appointments/create`,
-        appointmentData
+        appointmentData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       );
       console.log("Appointment created successfully:", response.data);
       return { success: true, data: response.data };
     } catch (error) {
-      console.error("Booking creation error:", error.response?.data || error.message);
-      return { success: false, error: error.response?.data || error.message };
+      console.error(
+        "Booking creation error:",
+        error.response?.data || error.message
+      );
+      const errorMessage = this.extractErrorMessage(error);
+      return { success: false, error: errorMessage };
     }
   }
 
@@ -292,13 +301,36 @@ static async getExpiredVehiclesByUser(userId) {
 
 
   // ------------------ APPLICANT STATUS ------------------
-  static async updateApplicantStatus(id, { status, reason }) {
+   static async updateApplicantStatus(id, { status, reason }) {
     try {
-      const response = await axios.put(`${API_BASE_URL}/applicants/update-status/${id}`, { status, reason });
+      const response = await axios.put(
+        `${API_BASE_URL}/admins/update-status/${id}`,
+        { status, reason },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
       return response.data;
     } catch (error) {
       console.error("Error updating applicant status:", error.response || error.message);
-      throw error;
+      const errorMessage = this.extractErrorMessage(error);
+      throw new Error(errorMessage);
+    }
+  }
+    static async getUserBookings(userId) {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/test-appointments/by-applicant/${userId}`
+      );
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error(
+        "Error fetching user bookings:",
+        error.response?.data || error.message
+      );
+      return { success: false, error: error.response?.data || error.message };
     }
   }
   // Fetch all vehicle discs
