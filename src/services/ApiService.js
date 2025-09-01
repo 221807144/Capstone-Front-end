@@ -38,7 +38,7 @@ static async registerUser(userData) {
     throw error;
   }
 }
-  // Login user
+
     // Login user
   static async loginUser(email, password) {
     try {
@@ -52,6 +52,21 @@ static async registerUser(userData) {
       throw error;
     }
   }
+  // static async loginAdmin(email, password) {
+  //   try {
+  //     const response = await axios.post(`${API_BASE_URL}/admins/login`, {
+  //       contact: { email },
+  //       password,
+  //     });
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error("Login error:", error.response || error.message);
+  //     throw error;
+  //   }
+  // }
+
+
+ 
 
   // Vehicle endpoints
   static async registerVehicle(vehicleData) {
@@ -90,6 +105,7 @@ static async registerUser(userData) {
 
 // ------------------ ADMINS ------------------
 // Login admin - updated to match your backend structure
+
 static async loginAdmin(email, password) {
   try {
     const response = await axios.post(`${API_BASE_URL}/admins/login`, {
@@ -102,7 +118,6 @@ static async loginAdmin(email, password) {
     throw error;
   }
 }
-
   static async getAllData() {
     try {
       const response = await axios.get(`${API_BASE_URL}/admins/all-data`);
