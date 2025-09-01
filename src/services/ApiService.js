@@ -103,6 +103,42 @@ static async registerUser(userData) {
     }
   }
 
+  // delete vehicle dashboard
+  // Delete a vehicle by ID
+static async deleteVehicle(vehicleID) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/vehicle/delete/${vehicleID}`);
+    return response.data; // "Vehicle deleted successfully"
+  } catch (error) {
+    console.error("Error deleting vehicle:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// get expired vehicle disc
+static async getExpiredVehiclesByUser(userId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/vehicle/expired/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching expired vehicles:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+// Fetch all expired vehicles (not per user)
+static async getExpiredVehicles() {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/vehicle/expired`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching expired vehicles:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+
+
 // ------------------ ADMINS ------------------
 // Login admin - updated to match your backend structure
 
@@ -231,18 +267,17 @@ static async loginAdmin(email, password) {
     }
   }
 
-  // Fetch vehicles for a specific user
+// Fetch vehicles for a specific user
 static async getVehiclesByUser(userId) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/vehicle/user/${userId}`);
-    // console.log("Fetched user vehicles:", userVehicles);
-
+    const response = await axios.get(`${API_BASE_URL}/vehicle/applicant/${userId}`);
     return response.data;
   } catch (error) {
     console.error("Error fetching user's vehicles:", error.response?.data || error.message);
     throw error;
   }
 }
+
 // Fetch expired vehicle discs for a specific user
 static async getExpiredVehiclesByUser(userId) {
   try {

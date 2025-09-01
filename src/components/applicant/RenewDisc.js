@@ -4,7 +4,7 @@ import { CheckCircle } from "lucide-react";
 import SharedLayout from "../sharedPages/SharedLayout";
 import ApiService from "../../services/ApiService";
 
-export default function RenewDisc({  }) {
+export default function RenewDisc() {
   const navigate = useNavigate();
   const location = useLocation();          // <- add this
   const user = location.state?.user;   
@@ -33,6 +33,7 @@ export default function RenewDisc({  }) {
     d.setHours(0, 0, 0, 0);
     return d;
   };
+  
 
   // Fetch expired discs for logged-in user
   useEffect(() => {
@@ -42,7 +43,7 @@ export default function RenewDisc({  }) {
     const fetchExpired = async () => {
       try {
         if (!user || !user.userId) return;
-        const data = await ApiService.getExpiredVehiclesByUser(user.userId);
+      const data = await ApiService.getExpiredVehicles();
         console.log("Fetched vehicles:", data);
         setVehicleList(data);
       } catch (err) {
@@ -52,12 +53,14 @@ export default function RenewDisc({  }) {
     fetchExpired();
   }, [user]);
 
-  // // // Filter expired vehicles ignoring time
-  // // const expiredVehicles = vehicleList.filter(
-  // //   (v) => v.vehicleDisc?.expiryDate && dateOnly(v.vehicleDisc.expiryDate) <= dateOnly(new Date())
-  // );
-// No need to filter again
-const expiredVehicles = vehicleList; 
+// Filter expired vehicles ignoring time
+const expiredVehicles = vehicleList.filter(
+  (v) =>
+    v.vehicleDisc?.expiryDate &&
+    dateOnly(v.vehicleDisc.expiryDate) <= dateOnly(new Date())
+);
+
+// const expiredVehicles = vehicleList; 
 
   const handleSelectVehicle = (index) => {
     setSelectedVehicleIndex(index);
