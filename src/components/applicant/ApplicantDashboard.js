@@ -84,6 +84,27 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
     },
   ];
 
+  // delete 
+  const handleDeleteVehicle = (vehicleID) => {
+  // Ask user for confirmation
+  const confirmed = window.confirm("Are you sure you want to delete this vehicle?");
+  if (confirmed) {
+    ApiService.deleteVehicle(vehicleID)
+      .then(() => {
+        alert("Deleted successfully");
+        // Remove the vehicle from state to update UI
+        setUserVehicles(userVehicles.filter(v => v.vehicleID !== vehicleID));
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Couldn't delete the vehicle");
+      });
+  } else {
+    alert("Vehicle not deleted");
+  }
+};
+
+
   const canAccessService = (service) => {
     if (!service.requires) return true;
     return userLicenseInfo && userLicenseInfo.type === service.requires;
@@ -311,14 +332,24 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
                         userVehicles.map((vehicle, index) => (
                           <div
                             key={index}
-                            className="mb-3 p-3 bg-light rounded-3"
+                            className="mb-3 p-3 bg-light rounded-3 d-flex justify-content-between align-items-center"
                           >
-                            <h6 className="fw-medium mb-1">
-                              {vehicle.vehicleName}
-                            </h6>
-                            <p className="text-muted small mb-0">
-                              Registration: {vehicle.licensePlate}
-                            </p>
+                            <div>
+                              <h6 className="fw-medium mb-1">
+                                {vehicle.vehicleName}
+                              </h6>
+                              <p className="text-muted small mb-0">
+                                License Number: {vehicle.licensePlate}
+                              </p>
+                            </div>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() =>
+                                handleDeleteVehicle(vehicle.vehicleID)
+                              }
+                            >
+                              Delete
+                            </button>
                           </div>
                         ))
                       ) : (
