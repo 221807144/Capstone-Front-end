@@ -82,6 +82,13 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       action: () => navigate("/pay-ticket"),
       requires: null,
     },
+      {
+          title: "Payments History",
+          description: "View payments for the user",
+          image: payTicketImg,
+          action: () => navigate("/payments"),
+          requires: null,
+      },
   ];
 
   // delete 
