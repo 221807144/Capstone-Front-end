@@ -1,85 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
+import SharedLayout from "../sharedPages/SharedLayout";
 import ApiService from "../../services/ApiService";
 
 // Import your service images
 import learnersTestImg from "../images/car1.jpeg";
 import driversTestImg from "../images/car2.jpg";
 import registerVehicleImg from "../images/car3.jpg";
+//import renewDiscImg from "../images/car4.jpg";
 import payTicketImg from "../images/car5.jpg";
 import disc from "../images/disc.jpg";
 import learners from "../images/learners.jpg";
 
-export default function ApplicantDashboard({ userData, bookings: initialBookings }) {
+export default function ApplicantDashboard({ userData, bookings, vehicles }) {
   const navigate = useNavigate();
-  const location = useLocation();
-
   const [hasLicense, setHasLicense] = useState(null);
   const [showLicenseModal, setShowLicenseModal] = useState(false);
   const [licenseType, setLicenseType] = useState("");
   const [licenseNumber, setLicenseNumber] = useState("");
   const [userLicenseInfo, setUserLicenseInfo] = useState(null);
-  const [vehicles, setVehicles] = useState([]);
-  const [bookings, setBookings] = useState(initialBookings || []);
-  const [loadingBookings, setLoadingBookings] = useState(true);
-  const [error, setError] = useState(null);
+  const [userVehicles, setUserVehicles] = useState([]);
 
-  // Fetch bookings on mount or refresh
+  // made changes
   useEffect(() => {
-    const fetchBookings = async () => {
-      if (!userData) {
-        setLoadingBookings(false);
-        return;
-      }
-
-      const applicantId = userData.applicantId || userData.id || userData.userId;
-      if (!applicantId) {
-        setError("Applicant ID not found in user data");
-        setLoadingBookings(false);
-        return;
-      }
-
-      setLoadingBookings(true);
-      setError(null);
-
-      try {
-        const response = await ApiService.getUserBookings(applicantId);
-
-        let bookingsData = [];
-        if (Array.isArray(response)) {
-          bookingsData = response;
-        } else if (response && Array.isArray(response.data)) {
-          bookingsData = response.data;
-        }
-
-        setBookings(bookingsData);
-      } catch (err) {
-        console.error("Failed to fetch bookings:", err);
-        setError("Failed to load bookings. Please try again later.");
-        setBookings([]);
-      } finally {
-        setLoadingBookings(false);
-      }
-    };
-
-    fetchBookings();
-  }, [userData, location.state?.refreshBookings]);
-
-  // Fetch vehicles
-  useEffect(() => {
-    const fetchVehicles = async () => {
-      if (!userData || !userData.userId) return;
-      try {
-        const response = await ApiService.getVehiclesByApplicant(userData.userId);
-        setVehicles(response);
-      } catch (err) {
-        console.error("Failed to fetch vehicles:", err);
-      }
-    };
-
-    fetchVehicles();
-  }, [userData]);
+    if (!userData || !userData.userId) {
+      navigate("/login");
+    } else {
+      ApiService.getVehiclesByUser(userData.userId)
+        .then((data) => setUserVehicles(data))
+        .catch((err) => console.error(err));
+    }
+  }, [userData, navigate]);
 
   const handleLicenseSelection = (type) => {
     setLicenseType(type);
@@ -119,7 +71,8 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
       title: "Renew Vehicle Disc",
       description: "Renew your vehicle disc",
       image: disc,
-      action: () => navigate("/renew-disc"),
+     action: () =>
+    navigate("/renew-disc", { state: { user: userData } }),
       requires: null,
     },
     {
@@ -157,19 +110,7 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
     return userLicenseInfo && userLicenseInfo.type === service.requires;
   };
 
-  const handleDelete = async (vehicleId) => {
-    if (window.confirm("Are you sure you want to delete this vehicle?")) {
-      try {
-        await ApiService.deleteVehicle(vehicleId);
-        alert("You have successfully deleted the vehicle");
-        setVehicles(vehicles.filter((v) => v.vehicleID !== vehicleId));
-      } catch (error) {
-        console.error("Delete error:", error);
-        alert("Something went wrong while deleting");
-      }
-    }
-  };
-
+  // Testimonials data
   const testimonials = [
     {
       id: 1,
@@ -191,9 +132,13 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
     },
   ];
 
-  const renderStars = (rating) => "★".repeat(rating) + "☆".repeat(5 - rating);
+  // Function to render star ratings
+  const renderStars = (rating) => {
+    return "★".repeat(rating) + "☆".repeat(5 - rating);
+  };
 
   return (
+    // <SharedLayout>
     <div className="container-fluid px-0">
       {/* Hero Section */}
       <section
@@ -212,14 +157,19 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
         }}
       >
         <div className="px-3" style={{ maxWidth: "800px" }}>
-          <h1 className="display-4 fw-bold mb-3">Effortless Vehicle Disc Registration</h1>
+          <h1 className="display-4 fw-bold mb-3">
+            Effortless Vehicle Disc Registration
+          </h1>
           <p className="lead mt-3 fs-4">
-            Your one-stop solution for licensing, fines management, and test bookings
+            Your one-stop solution for licensing, fines management, and test
+            bookings
           </p>
           <button
             className="btn btn-primary btn-lg mt-4 px-4 py-2"
             onClick={() =>
-              document.getElementById("services-section").scrollIntoView({ behavior: "smooth" })
+              document
+                .getElementById("services-section")
+                .scrollIntoView({ behavior: "smooth" })
             }
           >
             Explore Services
@@ -234,22 +184,25 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
             <div className="col-lg-8 text-center">
               <h2 className="fw-bold mb-4">About Our Service</h2>
               <p className="lead text-muted">
-                At our core, we strive to simplify your vehicle-related bureaucratic tasks. Our platform enables you to seamlessly register for vehicle discs, pay off tickets swiftly, and easily book appointments for learners and drivers tests.
+                At our core, we strive to simplify your vehicle-related
+                bureaucratic tasks. Our platform enables you to seamlessly
+                register for vehicle discs, pay off tickets swiftly, and easily
+                book appointments for learners and drivers tests.
               </p>
               <p className="text-muted">
-                We aim to save you time and provide peace of mind, ensuring smooth processes for all your vehicular needs.
+                We aim to save you time and provide peace of mind, ensuring
+                smooth processes for all your vehicular needs.
               </p>
             </div>
           </div>
         </div>
       </section>
-
       {/* Full-width CTA Section */}
       <section
         className="py-5 rounded-0"
         style={{
           backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${registerVehicleImg})`,
-          backgroundSize: "70%",
+          backgroundSize: "70%", // fits image within the section
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
         }}
@@ -259,12 +212,15 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
             <div className="col-lg-8 text-center text-white">
               <h2 className="display-5 fw-bold mb-4">Ready to Get Started?</h2>
               <p className="lead mb-4">
-                Join thousands of satisfied customers who have simplified their vehicle documentation process with our services.
+                Join thousands of satisfied customers who have simplified their
+                vehicle documentation process with our services.
               </p>
               <button
                 className="btn btn-primary btn-lg px-4 py-2"
                 onClick={() =>
-                  document.getElementById("services-section").scrollIntoView({ behavior: "smooth" })
+                  document
+                    .getElementById("services-section")
+                    .scrollIntoView({ behavior: "smooth" })
                 }
               >
                 Explore Our Services
@@ -274,7 +230,7 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
         </div>
       </section>
 
-      {/* User Info & Bookings Section */} //updated
+      {/* User Info Section */}
       <section className="py-5 bg-light">
         <div className="container">
           <div className="row justify-content-center">
@@ -282,7 +238,8 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
               <div className="text-center mb-5">
                 <h2 className="fw-bold">Your Driving Information</h2>
                 <p className="text-muted">
-                  Please let us know which license(s) you currently hold. This helps us provide you with the right services.
+                  Please let us know which license(s) you currently hold. This
+                  helps us provide you with the right services.
                 </p>
               </div>
 
@@ -292,12 +249,23 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
                       <h5 className="fw-bold mb-1">
-                        {userLicenseInfo.type === "license" ? "Driver's License" : "Learner's Permit"}
+                        {userLicenseInfo.type === "license"
+                          ? "Driver's License"
+                          : "Learner's Permit"}
                       </h5>
-                      <p className="mb-1 fw-medium">License Number: {userLicenseInfo.number}</p>
+                      <p className="mb-1 fw-medium">
+                        License Number: {userLicenseInfo.number}
+                      </p>
                       <p className="text-muted mb-0">Valid Until: 2028-05-15</p>
                     </div>
-                    <div style={{ width: "120px", height: "70px", backgroundColor: "#eaeaea", borderRadius: "6px" }}></div>
+                    <div
+                      style={{
+                        width: "120px",
+                        height: "70px",
+                        backgroundColor: "#eaeaea",
+                        borderRadius: "6px",
+                      }}
+                    ></div>
                   </div>
                 </div>
               ) : (
@@ -307,10 +275,16 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
                       Do you have a driver's license or learner's permit?
                     </h5>
                     <div>
-                      <button className="btn btn-outline-primary me-2 mb-2 mb-md-0" onClick={() => handleLicenseSelection("license")}>
+                      <button
+                        className="btn btn-outline-primary me-2 mb-2 mb-md-0"
+                        onClick={() => handleLicenseSelection("license")}
+                      >
                         Driver's License
                       </button>
-                      <button className="btn btn-outline-primary" onClick={() => handleLicenseSelection("learners")}>
+                      <button
+                        className="btn btn-outline-primary"
+                        onClick={() => handleLicenseSelection("learners")}
+                      >
                         Learner's Permit
                       </button>
                     </div>
@@ -318,7 +292,7 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
                 </div>
               )}
 
-              {/* Recent Bookings */}
+              {/* Recent Bookings & My Vehicles */}
               <div className="row mt-4">
                 <div className="col-lg-6 mb-4">
                   <div className="card shadow-sm border-0 rounded-4 h-100">
@@ -326,43 +300,24 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
                       Recent Bookings
                     </div>
                     <div className="card-body">
-                      {loadingBookings ? (
-                        <p>Loading bookings...</p>
-                      ) : error ? (
-                        <p className="text-danger">{error}</p>
-                      ) : bookings.length === 0 ? (
-                        <p className="text-muted">No bookings yet</p>
+                      {bookings && bookings.length > 0 ? (
+                        bookings.map((booking, index) => (
+                          <div
+                            key={index}
+                            className="mb-3 p-3 bg-light rounded-3"
+                          >
+                            <h6 className="fw-medium mb-1">{booking.type}</h6>
+                            <p className="text-muted small mb-0">
+                              {booking.date}
+                            </p>
+                          </div>
+                        ))
                       ) : (
-                        <ul className="list-group">
-                          {bookings.map((booking, index) => {
-                            let testTypeText = "";
-                            if (booking.testype === "LEARNERSLICENSETEST") testTypeText = "Learners Test";
-                            else if (booking.testype === "DRIVERSLICENSETEST") testTypeText = "Drivers Test";
-                            else testTypeText = "Unknown Test";
-
-                            const testResult =
-                              booking.testResult === null || booking.testResult === undefined
-                                ? "Pending"
-                                : booking.testResult
-                                ? "Pass"
-                                : "Fail";
-
-                            return (
-                              <li key={index} className="list-group-item">
-                                <strong>Test Type:</strong> {testTypeText} <br />
-                                <strong>Date:</strong> {booking.testDate || booking.date} <br />
-                                <strong>Venue:</strong> {booking.testVenue || "N/A"} <br />
-                                <strong>Result:</strong> {testResult}
-                              </li>
-                            );
-                          })}
-                        </ul>
+                        <p className="text-muted">No bookings yet</p>
                       )}
                     </div>
                   </div>
                 </div>
-
-                {/* My Vehicles */}
                 <div className="col-lg-6 mb-4">
                   <div className="card shadow-sm border-0 rounded-4 h-100">
                     <div className="card-header bg-primary text-white fw-bold">
@@ -377,14 +332,24 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
                         userVehicles.map((vehicle, index) => (
                           <div
                             key={index}
-                            className="mb-3 p-3 bg-light rounded-3"
+                            className="mb-3 p-3 bg-light rounded-3 d-flex justify-content-between align-items-center"
                           >
-                            <h6 className="fw-medium mb-1">
-                              {vehicle.vehicleName}
-                            </h6>
-                            <p className="text-muted small mb-0">
-                              Registration: {vehicle.licensePlate}
-                            </p>
+                            <div>
+                              <h6 className="fw-medium mb-1">
+                                {vehicle.vehicleName}
+                              </h6>
+                              <p className="text-muted small mb-0">
+                                License Number: {vehicle.licensePlate}
+                              </p>
+                            </div>
+                            <button
+                              className="btn btn-danger btn-sm"
+                              onClick={() =>
+                                handleDeleteVehicle(vehicle.vehicleID)
+                              }
+                            >
+                              Delete
+                            </button>
                           </div>
                         ))
                       ) : (
@@ -404,31 +369,54 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
         <div className="container">
           <div className="text-center mb-5">
             <h2 className="fw-bold">SERVICES</h2>
-            <div className="mx-auto" style={{ height: "3px", width: "80px", backgroundColor: "#0d6efd" }}></div>
+            <div
+              className="mx-auto"
+              style={{
+                height: "3px",
+                width: "80px",
+                backgroundColor: "#0d6efd",
+              }}
+            ></div>
           </div>
+
           <div className="row g-4">
             {services.map((service, index) => {
               const disabled = service.requires && !canAccessService(service);
               return (
                 <div key={index} className="col-12 col-md-6 col-lg-4">
                   <div
-                    className={`card h-100 border-0 shadow-sm rounded-4 overflow-hidden ${disabled ? "bg-light" : "service-card"}`}
-                    style={{ cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.6 : 1, transition: "transform 0.3s, box-shadow 0.3s" }}
+                    className={`card h-100 border-0 shadow-sm rounded-4 overflow-hidden ${
+                      disabled ? "bg-light" : "service-card"
+                    }`}
+                    style={{
+                      cursor: disabled ? "not-allowed" : "pointer",
+                      opacity: disabled ? 0.6 : 1,
+                      transition: "transform 0.3s, box-shadow 0.3s",
+                    }}
                     onClick={disabled ? null : service.action}
                     onMouseOver={(e) => {
                       if (!disabled) {
                         e.currentTarget.style.transform = "translateY(-5px)";
-                        e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.15)";
+                        e.currentTarget.style.boxShadow =
+                          "0 12px 24px rgba(0,0,0,0.15)";
                       }
                     }}
                     onMouseOut={(e) => {
                       if (!disabled) {
                         e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow = "0 4px 6px rgba(0,0,0,0.1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 4px 6px rgba(0,0,0,0.1)";
                       }
                     }}
                   >
-                    <div style={{ height: "200px", backgroundImage: `url(${service.image})`, backgroundSize: "cover", backgroundPosition: "center" }}></div>
+                    <div
+                      style={{
+                        height: "200px",
+                        backgroundImage: `url(${service.image})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }}
+                    ></div>
                     <div className="card-body text-center p-4">
                       <h4 className="fw-bold mb-3">{service.title}</h4>
                       <p className="text-muted mb-0">{service.description}</p>
@@ -446,15 +434,27 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
         <div className="container">
           <div className="text-center mb-5">
             <h2 className="fw-bold">TESTIMONIALS</h2>
-            <div className="mx-auto" style={{ height: "3px", width: "80px", backgroundColor: "#0d6efd" }}></div>
+            <div
+              className="mx-auto"
+              style={{
+                height: "3px",
+                width: "80px",
+                backgroundColor: "#0d6efd",
+              }}
+            ></div>
           </div>
+
           <div className="row g-4">
             {testimonials.map((testimonial) => (
               <div key={testimonial.id} className="col-md-4">
                 <div className="card h-100 border-0 shadow-sm rounded-4 p-4">
-                  <div className="text-warning mb-3 fs-5">{renderStars(testimonial.rating)}</div>
+                  <div className="text-warning mb-3 fs-5">
+                    {renderStars(testimonial.rating)}
+                  </div>
                   <p className="fst-italic mb-4">"{testimonial.text}"</p>
-                  <p className="fw-bold text-primary mb-0">{testimonial.author}</p>
+                  <p className="fw-bold text-primary mb-0">
+                    {testimonial.author}
+                  </p>
                 </div>
               </div>
             ))}
@@ -469,9 +469,17 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  Enter Your {licenseType === "license" ? "Driver's License" : "Learner's Permit"} Number
+                  Enter Your{" "}
+                  {licenseType === "license"
+                    ? "Driver's License"
+                    : "Learner's Permit"}{" "}
+                  Number
                 </h5>
-                <button type="button" className="btn-close" onClick={() => setShowLicenseModal(false)}></button>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowLicenseModal(false)}
+                ></button>
               </div>
               <div className="modal-body">
                 <input
@@ -483,10 +491,17 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
                 />
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowLicenseModal(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowLicenseModal(false)}
+                >
                   Cancel
                 </button>
-                <button className="btn btn-primary" onClick={saveLicenseInfo} disabled={!licenseNumber.trim()}>
+                <button
+                  className="btn btn-primary"
+                  onClick={saveLicenseInfo}
+                  disabled={!licenseNumber.trim()}
+                >
                   Save
                 </button>
               </div>
@@ -496,5 +511,6 @@ export default function ApplicantDashboard({ userData, bookings: initialBookings
       )}
       {showLicenseModal && <div className="modal-backdrop show"></div>}
     </div>
-  );
+    // </SharedLayout>
+  );
 }
