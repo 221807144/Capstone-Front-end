@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/capstone";
 
+
 class ApiService {
   // Create Test Appointment
 
@@ -51,31 +52,65 @@ static async registerUser(userData) {
     // Login user
   static async loginUser(email, password) {
     try {
-      const response = await axios.post(`${API_BASE_URL}/applicants/login`, {
-        contact: { email },
-        password,
-      });
-      return response.data;
+        const response = await axios.post(
+            `${API_BASE_URL}/applicants/login`,
+            {
+                contact: { email: email },
+                password: password,
+            },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                }
+            }
+        );
+
+        // Check the response structure
+        console.log("Login response:", response); // Debug log
+        
+        // If response is a string (error message), throw it
+        if (typeof response.data === 'string') {
+            throw new Error(response.data);
+        }
+        
+        // If response is an object with data property (common in Spring)
+        if (response.data && response.data.data) {
+            return response.data.data;
+        }
+        
+        // If response is the applicant object directly
+        if (response.data && response.data.firstName) {
+            return response.data;
+        }
+        
+        // If none of the above, throw error
+        throw new Error("Invalid response format from server");
+
     } catch (error) {
-      console.error("Login error:", error.response || error.message);
-      throw error;
+        // Extract error message from various possible response formats
+        let errorMessage = "Login failed. Please check your credentials.";
+        
+        if (error.response) {
+            // Server responded with error status
+            if (typeof error.response.data === 'string') {
+                errorMessage = error.response.data;
+            } else if (error.response.data.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.response.data.error) {
+                errorMessage = error.response.data.error;
+            } else if (error.response.data.data) {
+                errorMessage = error.response.data.data;
+            }
+        } else if (error.request) {
+            errorMessage = "No response from server. Please try again later.";
+        } else {
+            errorMessage = error.message;
+        }
+        
+        throw new Error(errorMessage);
     }
-  }
-  // static async loginAdmin(email, password) {
-  //   try {
-  //     const response = await axios.post(`${API_BASE_URL}/admins/login`, {
-  //       contact: { email },
-  //       password,
-  //     });
-  //     return response.data;
-  //   } catch (error) {
-  //     console.error("Login error:", error.response || error.message);
-  //     throw error;
-  //   }
-  // }
+}
 
-
- 
 
   // Vehicle endpoints
   static async registerVehicle(vehicleData) {
@@ -100,17 +135,7 @@ static async registerUser(userData) {
       throw error;
     }
   }
-
-  // Payment method
-  static async createPayment(paymentData) {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/payments/create`, paymentData);
-      return response.data;
-    } catch (error) {
-      console.error("Payment creation error:", error.response?.data || error.message);
-      throw error;
-    }
-  }
+  
 
   // delete vehicle dashboard
   // Delete a vehicle by ID
@@ -236,16 +261,6 @@ static async loginAdmin(email, password) {
     }
   }
 
-  static async deletePayment(id) {
-    try {
-      const response = await axios.delete(`${API_BASE_URL}/payment/delete/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error("Error deleting payment:", error.response || error.message);
-      throw error;
-    }
-  }
-
   static async deleteTestAppointment(id) {
     try {
       const response = await axios.delete(`${API_BASE_URL}/test-appointments/delete/${id}`);
@@ -356,7 +371,62 @@ static async getExpiredVehicles() {
   }
 }
 
+// Payment functions
+
+static async getAllPayments() {
+       try {
+           const response = await axios.get(`${API_BASE_URL}/payments/getAll`);
+           return response.data;
+       } catch (error) {
+           console.error("Error fetching payments:", error.response?.data || error.message);
+           throw error;
+       }
+   }
+
+static async deletePayment(id) {
+    try {
+      const response = await axios.delete(`${API_BASE_URL}/payment/delete/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting payment:", error.response || error.message);
+      throw error;
+    }
+  }
+
+static async createPayment(paymentData) {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/payments/create`, paymentData);
+      return response.data;
+    } catch (error) {
+      console.error("Payment creation error:", error.response?.data || error.message);
+      throw error;
+    }
+  }
+
+  // Tickets Functions
+
+  // Get all tickets
+static async getAllTickets() {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/tickets/getAll`);
+    return response;
+  } catch (error) {
+    console.error("Error fetching tickets:", error.response?.data || error.message);
+    throw error;
+  }
 }
 
+// Update a ticket
+static async updateTicket(id, ticketData) {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/tickets/update`, ticketData);
+    return response;
+  } catch (error) {
+    console.error("Error updating ticket:", error.response?.data || error.message);
+    throw error;
+  }
+}
+
+}
 
 export default ApiService;
