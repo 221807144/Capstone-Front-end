@@ -1,0 +1,372 @@
+/* Ticket.css */
+.ticket-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+}
+
+.ticket-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.ticket-header h2 {
+  font-size: 2.2rem;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.ticket-header p {
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.loading-spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 2rem auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  background-color: #ffecec;
+  color: #e74c3c;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.retry-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  display: block;
+  margin: 0 auto;
+  transition: background-color 0.3s;
+}
+
+.retry-btn:hover {
+  background-color: #c0392b;
+}
+
+.no-tickets {
+  text-align: center;
+  padding: 3rem;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  margin-top: 2rem;
+}
+
+.no-tickets-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.no-tickets h3 {
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.no-tickets p {
+  color: #7f8c8d;
+}
+
+.tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.ticket-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  position: relative;
+  transition: transform 0.3s, box-shadow 0.3s;
+  border-left: 4px solid #3498db;
+}
+
+.ticket-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.ticket-type-badge {
+  position: absolute;
+  top: -10px;
+  right: 1rem;
+  background: #e74c3c;
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.ticket-info h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.3rem;
+}
+
+.ticket-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-item .label {
+  font-weight: 600;
+  color: #7f8c8d;
+}
+
+.detail-item .value {
+  font-weight: 500;
+}
+
+.status {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status.paid {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status.unpaid {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.pay-button {
+  width: 100%;
+  background: linear-gradient(to right, #3498db, #2980b9);
+  color: white;
+  border: none;
+  padding: 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  transition: all 0.3s;
+}
+
+.pay-button:hover {
+  background: linear-gradient(to right, #2980b9, #256a9e);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.payment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.payment-modal {
+  background-color: white;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #2c3e50;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #7f8c8d;
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: #e74c3c;
+}
+
+.payment-summary {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin: 1rem 1.5rem;
+}
+
+.payment-summary p {
+  margin: 0.5rem 0;
+}
+
+.payment-form {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.2rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.payment-method-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.payment-method-toggle button {
+  flex: 1;
+  padding: 0.8rem;
+  border: 2px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.payment-method-toggle button.active {
+  border-color: #3498db;
+  background-color: #e8f4fd;
+  color: #3498db;
+}
+
+.cash-note {
+  background-color: #e8f4fd;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.cancel-btn,
+.submit-btn {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #c0392b;
+}
+
+.submit-btn {
+  background: linear-gradient(to right, #2ecc71, #27ae60);
+  color: white;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(to right, #27ae60, #219653);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ticket-container {
+    padding: 1rem;
+  }
+  
+  .tickets-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .payment-modal {
+    margin: 1rem;
+  }
+}

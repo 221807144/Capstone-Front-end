@@ -7,10 +7,11 @@ import ApplicantDashboard from "./components/applicant/ApplicantDashboard";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import VehicleRegistration from "./components/applicant/VehicleRegistration";
 import VehicleDisc from "./components/applicant/VehicleDisc";
-import PayTrafficTicket from "./components/applicant/PayTrafficTicket";
+import Ticket from "./components/applicant/Ticket";
 import Booking from "./components/applicant/Booking";
 import BookingDetails from "./components/applicant/BookingDetails";
 import RenewDisc from "./components/applicant/RenewDisc";
+import Payments from "./components/applicant/Payment"
 import Profile from "./components/applicant/Profile";
 import SharedLayout from "./components/sharedPages/SharedLayout";
 
@@ -52,6 +53,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LoginScreen onLogin={handleLogin} />} />
         <Route path="/register" element={<RegistrationStep1 onNext={handleRegisterNext} />} />
+        <Route path="/payments" element={<Payments user={user} />} />
 
     <Route
   path="/applicant"
@@ -79,7 +81,7 @@ export default function App() {
         />
 
         <Route path="/vehicle-disc" element={<VehicleDisc />} />
-        <Route path="/pay-ticket" element={<PayTrafficTicket />} />
+        <Route path="/pay-ticket" element={<Ticket />} />
         <Route path="/booking-details/:id" element={<BookingDetails />} />
         <Route path="/renew-disc" element={<RenewDisc />} />
 
