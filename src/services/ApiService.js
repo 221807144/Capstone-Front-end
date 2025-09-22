@@ -29,6 +29,26 @@ class ApiService {
       return { success: false, error: errorMessage };
     }
   }
+//Profile
+  static async getUserById(userId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/applicants/read/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user:", error.response || error.message);
+    throw error;
+  }
+}
+
+static async updateApplicant(applicantData) {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/applicants/update`, applicantData);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating applicant:", error.response?.data || error.message);
+    throw error;
+  }
+}
 
   
   // Register a new user

@@ -8,7 +8,6 @@ import ApiService from "../../services/ApiService";
 import learnersTestImg from "../images/car1.jpeg";
 import driversTestImg from "../images/car2.jpg";
 import registerVehicleImg from "../images/car3.jpg";
-//import renewDiscImg from "../images/car4.jpg";
 import payTicketImg from "../images/car5.jpg";
 import disc from "../images/disc.jpg";
 import learners from "../images/learners.jpg";
@@ -21,8 +20,15 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
   const [licenseNumber, setLicenseNumber] = useState("");
   const [userLicenseInfo, setUserLicenseInfo] = useState(null);
   const [userVehicles, setUserVehicles] = useState([]);
+  const [userLicense, setUserLicense] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // made changes
+  // Fetch user license information
+  useEffect(() => {
+    fetchUserLicense();
+  }, [userData]);
+
+  // Fetch user vehicles
   useEffect(() => {
     if (!userData || !userData.userId) {
       navigate("/login");
@@ -32,6 +38,29 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
         .catch((err) => console.error(err));
     }
   }, [userData, navigate]);
+
+  const fetchUserLicense = async () => {
+    try {
+      const response = await ApiService.getAllLicenses();
+      if (response.success) {
+        const license = response.data.find(license => 
+          license.applicant && license.applicant.userId === userData.userId
+        );
+        if (license) {
+          setUserLicense(license);
+          setUserLicenseInfo({ 
+            type: license.licenseType || "Driver's License", 
+            number: license.licenseCode 
+          });
+          setHasLicense(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching license:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLicenseSelection = (type) => {
     setLicenseType(type);
@@ -71,8 +100,7 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       title: "Renew Vehicle Disc",
       description: "Renew your vehicle disc",
       image: disc,
-     action: () =>
-    navigate("/renew-disc", { state: { user: userData } }),
+      action: () => navigate("/renew-disc", { state: { user: userData } }),
       requires: null,
     },
     {
@@ -82,35 +110,32 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       action: () => navigate("/pay-ticket"),
       requires: null,
     },
-      {
-          title: "Payments History",
-          description: "View payments for the user",
-          image: payTicketImg,
-          action: () => navigate("/payments"),
-          requires: null,
-      },
+    {
+      title: "Payments History",
+      description: "View payments for the user",
+      image: payTicketImg,
+      action: () => navigate("/payments"),
+      requires: null,
+    },
   ];
 
-  // delete 
+  // delete vehicle
   const handleDeleteVehicle = (vehicleID) => {
-  // Ask user for confirmation
-  const confirmed = window.confirm("Are you sure you want to delete this vehicle?");
-  if (confirmed) {
-    ApiService.deleteVehicle(vehicleID)
-      .then(() => {
-        alert("Deleted successfully");
-        // Remove the vehicle from state to update UI
-        setUserVehicles(userVehicles.filter(v => v.vehicleID !== vehicleID));
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Couldn't delete the vehicle");
-      });
-  } else {
-    alert("Vehicle not deleted");
-  }
-};
-
+    const confirmed = window.confirm("Are you sure you want to delete this vehicle?");
+    if (confirmed) {
+      ApiService.deleteVehicle(vehicleID)
+        .then(() => {
+          alert("Deleted successfully");
+          setUserVehicles(userVehicles.filter(v => v.vehicleID !== vehicleID));
+        })
+        .catch((err) => {
+          console.error(err);
+          alert("Couldn't delete the vehicle");
+        });
+    } else {
+      alert("Vehicle not deleted");
+    }
+  };
 
   const canAccessService = (service) => {
     if (!service.requires) return true;
@@ -144,8 +169,19 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
     return "★".repeat(rating) + "☆".repeat(5 - rating);
   };
 
+  if (loading) {
+    return (
+      <div className="container-fluid px-0">
+        <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    // <SharedLayout>
     <div className="container-fluid px-0">
       {/* Hero Section */}
       <section
@@ -165,11 +201,15 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       >
         <div className="px-3" style={{ maxWidth: "800px" }}>
           <h1 className="display-4 fw-bold mb-3">
-            Effortless Vehicle Disc Registration
+            Welcome, {userData.firstName}!
           </h1>
+          {userLicense && (
+            <p className="lead mt-3 fs-4">
+              License: {userLicense.licenseCode} ({userLicense.licenseType || "Driver's License"})
+            </p>
+          )}
           <p className="lead mt-3 fs-4">
-            Your one-stop solution for licensing, fines management, and test
-            bookings
+            Your one-stop solution for licensing, fines management, and test bookings
           </p>
           <button
             className="btn btn-primary btn-lg mt-4 px-4 py-2"
@@ -204,12 +244,13 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
           </div>
         </div>
       </section>
+
       {/* Full-width CTA Section */}
       <section
         className="py-5 rounded-0"
         style={{
           backgroundImage: `linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url(${registerVehicleImg})`,
-          backgroundSize: "70%", // fits image within the section
+          backgroundSize: "70%",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
         }}
@@ -251,19 +292,20 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
               </div>
 
               {/* License Info */}
-              {userLicenseInfo ? (
+              {userLicense ? (
                 <div className="card shadow-sm border-0 p-4 mb-4 rounded-4">
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
                       <h5 className="fw-bold mb-1">
-                        {userLicenseInfo.type === "license"
-                          ? "Driver's License"
-                          : "Learner's Permit"}
+                        {userLicense.licenseType || "Driver's License"}
                       </h5>
                       <p className="mb-1 fw-medium">
-                        License Number: {userLicenseInfo.number}
+                        License Number: {userLicense.licenseCode}
                       </p>
-                      <p className="text-muted mb-0">Valid Until: 2028-05-15</p>
+                      <p className="text-muted mb-0">
+                        Issue Date: {userLicense.issueDate}
+                        {userLicense.expiryDate && ` | Expiry Date: ${userLicense.expiryDate}`}
+                      </p>
                     </div>
                     <div
                       style={{
@@ -271,8 +313,15 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
                         height: "70px",
                         backgroundColor: "#eaeaea",
                         borderRadius: "6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: "bold",
+                        color: "#666"
                       }}
-                    ></div>
+                    >
+                      LICENSE
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -284,13 +333,13 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
                     <div>
                       <button
                         className="btn btn-outline-primary me-2 mb-2 mb-md-0"
-                        onClick={() => handleLicenseSelection("license")}
+                        onClick={() => handleLicenseSelection("Driver's License")}
                       >
                         Driver's License
                       </button>
                       <button
                         className="btn btn-outline-primary"
-                        onClick={() => handleLicenseSelection("learners")}
+                        onClick={() => handleLicenseSelection("Learner's Permit")}
                       >
                         Learner's Permit
                       </button>
@@ -330,7 +379,6 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
                     <div className="card-header bg-primary text-white fw-bold">
                       My Vehicles
                     </div>
-                    {/* made changes */}
                     <div
                       className="card-body"
                       style={{ maxHeight: "400px", overflowY: "auto" }}
@@ -476,11 +524,7 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  Enter Your{" "}
-                  {licenseType === "license"
-                    ? "Driver's License"
-                    : "Learner's Permit"}{" "}
-                  Number
+                  Enter Your {licenseType} Number
                 </h5>
                 <button
                   type="button"
@@ -494,7 +538,7 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
                   className="form-control"
                   value={licenseNumber}
                   onChange={(e) => setLicenseNumber(e.target.value)}
-                  placeholder={`Enter your ${licenseType}`}
+                  placeholder={`Enter your ${licenseType} number`}
                 />
               </div>
               <div className="modal-footer">
@@ -518,6 +562,5 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       )}
       {showLicenseModal && <div className="modal-backdrop show"></div>}
     </div>
-    // </SharedLayout>
-  );
+  );
 }
