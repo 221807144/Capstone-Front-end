@@ -13,6 +13,19 @@
   }
 }
 
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+.status-accepted {
+  background-color: #d4edda;
+  color: #155724;
+}
+.status-rejected {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;

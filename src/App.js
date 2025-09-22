@@ -12,8 +12,8 @@ import Booking from "./components/applicant/Booking";
 import BookingDetails from "./components/applicant/BookingDetails";
 import RenewDisc from "./components/applicant/RenewDisc";
 import Payments from "./components/applicant/Payment"
-import Profile from "./components/applicant/Profile";
 import SharedLayout from "./components/sharedPages/SharedLayout";
+import Profile from "./components/applicant/Profile";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -39,6 +39,8 @@ export default function App() {
     );
   };
 
+  
+
   const handleRegisterNext = (data) => {
     setUser({ ...data, isApplicant: true });
     alert("Personal details saved: " + JSON.stringify(data));
@@ -54,8 +56,13 @@ export default function App() {
         <Route path="/" element={<LoginScreen onLogin={handleLogin} />} />
         <Route path="/register" element={<RegistrationStep1 onNext={handleRegisterNext} />} />
         <Route path="/payments" element={<Payments user={user} />} />
+        <Route path="/profile" element={<Profile userId={user?.userId} />} />
+      
+ 
 
-    <Route
+
+
+ <Route
   path="/applicant"
   element={
     user && user.isApplicant ? (
@@ -67,6 +74,11 @@ export default function App() {
     )
   }
 />
+
+   
+   
+      
+
 
 
         <Route
@@ -95,6 +107,8 @@ export default function App() {
     )
   }
 />
+ 
+
 
 
         {/* ✅ Booking route saves to backend now */}
@@ -118,6 +132,15 @@ export default function App() {
               <Navigate to="/" replace />
             )
           }
+        />
+        
+        <Route 
+          path="/profile" 
+          element={
+            <SharedLayout>
+              <Profile userId={user?.userId} />
+            </SharedLayout>
+          } 
         />
        
       </Routes>
