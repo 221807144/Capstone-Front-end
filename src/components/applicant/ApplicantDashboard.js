@@ -91,25 +91,36 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       },
   ];
 
-  // delete 
-  const handleDeleteVehicle = (vehicleID) => {
+ // delete 
+const handleDeleteVehicle = async (vehicleID) => {
   // Ask user for confirmation
   const confirmed = window.confirm("Are you sure you want to delete this vehicle?");
-  if (confirmed) {
-    ApiService.deleteVehicle(vehicleID)
-      .then(() => {
-        alert("Deleted successfully");
-        // Remove the vehicle from state to update UI
-        setUserVehicles(userVehicles.filter(v => v.vehicleID !== vehicleID));
-      })
-      .catch((err) => {
-        console.error(err);
-        alert("Couldn't delete the vehicle");
-      });
-  } else {
+  if (!confirmed) {
     alert("Vehicle not deleted");
+    return;
+  }
+
+  try {
+    // Call API to delete vehicle
+    const response = await ApiService.deleteVehicle(vehicleID);
+
+    // Check if backend confirmed deletion
+    if (response && response === "Vehicle deleted successfully") {
+      alert("Vehicle deleted successfully");
+      // Update UI by removing vehicle from state
+      setUserVehicles(prevVehicles => prevVehicles.filter(v => v.vehicleID !== vehicleID));
+    } else {
+      // Backend returned a message indicating failure
+      console.error("Vehicle deletion failed. Backend response:", response);
+      alert(response || "Could not delete vehicle. Please try again.");
+    }
+  } catch (error) {
+    // Log full error details in console
+    console.error("Error deleting vehicle:", error.response?.data || error.message, error);
+    alert(error.response?.data || "An error occurred while deleting the vehicle.");
   }
 };
+
 
 
   const canAccessService = (service) => {

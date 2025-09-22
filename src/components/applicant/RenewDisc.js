@@ -7,11 +7,13 @@ import ApiService from "../../services/ApiService";
 export default function RenewDisc() {
   const navigate = useNavigate();
   const location = useLocation();          // <- add this
-  const user = location.state?.user;   
-      // <- get user from navigation state
+  const user = location.state?.user;
+  // This is the crucial line: get the expiredDiscs from the navigation state
+  const expiredDiscs = location.state?.expiredDiscs;
 
-       console.log("RenewDisc component mounted");
+  console.log("RenewDisc component mounted");
   console.log("Received user:", user);
+  console.log("Received expired discs:", expiredDiscs);
   const [vehicleList, setVehicleList] = useState([]);
   const [step, setStep] = useState(1);
   const [selectedVehicleIndex, setSelectedVehicleIndex] = useState(null);
@@ -37,13 +39,14 @@ export default function RenewDisc() {
 
   // Fetch expired discs for logged-in user
   useEffect(() => {
-      if (!user?.userId) return;
+      if (!user?.userId ) return; //made changes
     console.log("useEffect triggered", user);
 
     const fetchExpired = async () => {
       try {
         if (!user || !user.userId) return;
-      const data = await ApiService.getExpiredVehicles();
+      const data = await ApiService.getExpiredVehiclesByUser(user.userId);
+      
         console.log("Fetched vehicles:", data);
         setVehicleList(data);
       } catch (err) {
