@@ -169,18 +169,18 @@ static async deleteVehicle(vehicleID) {
   }
 }
 
-// get expired vehicle disc
-static async getExpiredVehiclesByUser(userId) {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/vehicle/expired/${userId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching expired vehicles:", error.response?.data || error.message);
-    throw error;
-  }
-}
+// // get expired vehicle disc
+// static async getExpiredVehiclesByUser(userId) {
+//   try {
+//     const response = await axios.get(`${API_BASE_URL}/vehicle/expired/${userId}`);
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error fetching expired vehicles:", error.response?.data || error.message);
+//     throw error;
+//   }
+// }
 
-// Fetch all expired vehicles (not per user)
+// // Fetch all expired vehicles (not per user)
 static async getExpiredVehicles() {
   try {
     const response = await axios.get(`${API_BASE_URL}/vehicle/expired`);
@@ -190,7 +190,17 @@ static async getExpiredVehicles() {
     throw error;
   }
 }
-
+// made chnages
+// ✅ Correct
+static async getExpiredVehiclesByUser(userId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/vehicle/expired/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching expired vehicles by user:", error.response?.data || error.message);
+    throw error;
+  }
+}
 
 
 // ------------------ ADMINS ------------------
@@ -322,16 +332,6 @@ static async getVehiclesByUser(userId) {
   }
 }
 
-// Fetch expired vehicle discs for a specific user
-static async getExpiredVehiclesByUser(userId) {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/vehicle/expired/user/${userId}`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching expired vehicles:", error.response?.data || error.message);
-    throw error;
-  }
-}
 
 
 
@@ -380,16 +380,6 @@ static async getAllVehicleDiscs() {
 }
 // src/services/ApiService.js
 
-// Fetch expired vehicles from backend
-static async getExpiredVehicles() {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/vehicle/expired`);
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching expired vehicles:", error.response || error.message);
-    throw error;
-  }
-}
 
 // Payment functions
 
