@@ -3,17 +3,20 @@ import { useNavigate, useLocation } from "react-router-dom"; // <- import useLoc
 import { CheckCircle } from "lucide-react";
 import SharedLayout from "../sharedPages/SharedLayout";
 import ApiService from "../../services/ApiService";
+import { calculateExpiryDate } from "../applicant/utils/DateHelpers";
 
 export default function RenewDisc() {
+  const [renewedVehicle, setRenewedVehicle] = useState(null);
+
   const navigate = useNavigate();
   const location = useLocation();          // <- add this
   const user = location.state?.user;
   // This is the crucial line: get the expiredDiscs from the navigation state
-  const expiredDiscs = location.state?.expiredDiscs;
+ // const expiredDiscs = location.state?.expiredDiscs;
 
   console.log("RenewDisc component mounted");
   console.log("Received user:", user);
-  console.log("Received expired discs:", expiredDiscs);
+ // console.log("Received expired discs:", expiredDiscs);
   const [vehicleList, setVehicleList] = useState([]);
   const [step, setStep] = useState(1);
   const [selectedVehicleIndex, setSelectedVehicleIndex] = useState(null);
@@ -29,12 +32,12 @@ export default function RenewDisc() {
     cardholderName: "",
   });
 
-  // Helper to strip time from a date
-  const dateOnly = (date) => {
-    const d = new Date(date);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  };
+  // // Helper to strip time from a date
+  // const dateOnly = (date) => {
+  //   const d = new Date(date);
+  //   d.setHours(0, 0, 0, 0);
+  //   return d;
+  // };
   
 
   // Fetch expired discs for logged-in user
@@ -56,14 +59,14 @@ export default function RenewDisc() {
     fetchExpired();
   }, [user]);
 
-// Filter expired vehicles ignoring time
-const expiredVehicles = vehicleList.filter(
-  (v) =>
-    v.vehicleDisc?.expiryDate &&
-    dateOnly(v.vehicleDisc.expiryDate) <= dateOnly(new Date())
-);
+// // Filter expired vehicles ignoring time
+// const expiredVehicles = vehicleList.filter(
+//   (v) =>
+//     v.vehicleDisc?.expiryDate &&
+//     dateOnly(v.vehicleDisc.expiryDate) <= dateOnly(new Date())
+// );
 
-// const expiredVehicles = vehicleList; 
+const expiredVehicles = vehicleList; 
 
   const handleSelectVehicle = (index) => {
     setSelectedVehicleIndex(index);
@@ -122,8 +125,33 @@ const expiredVehicles = vehicleList.filter(
     const updatedVehicles = [...vehicleList];
     const vehicle = updatedVehicles[selectedVehicleIndex];
 
-    const newExpiry = new Date();
-    newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+      // --- RENEWAL LOGIC ---
+  // 1 year from today, ignoring vehicle year for simplicity
+  const today = new Date(); // <-- define today here
+  const newExpiry = new Date(
+    today.getFullYear() + 1,
+    today.getMonth(),
+    today.getDate()
+  );
+// made changes here
+//     // const newExpiry = new Date();
+//     // newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+
+//     const vehicleYear = parseInt(vehicle.vehicleYear, 10);
+// let newExpiry = new Date();
+
+// if (vehicleYear < 2024) {
+//   newExpiry = new Date(); // today
+// } else {
+//   newExpiry.setFullYear(newExpiry.getFullYear() + 1); // +1 year
+// }
+
+// // Strip time to avoid midnight issues
+// newExpiry = new Date(newExpiry.getFullYear(), newExpiry.getMonth(), newExpiry.getDate());
+
+// const vehicleYear = parseInt(vehicle.vehicleYear, 10);
+// const newExpiry = calculateExpiryDate(vehicleYear);
+
 
     try {
       await ApiService.createVehicleDisc({
@@ -134,18 +162,55 @@ const expiredVehicles = vehicleList.filter(
         cardDetails: paymentMethod === "Card" ? cardDetails : null,
       });
 
-      updatedVehicles[selectedVehicleIndex].vehicleDisc.expiryDate = newExpiry;
-      setVehicleList(updatedVehicles);
-      setSuccess(true);
-    } catch (err) {
-      console.error("Error renewing vehicle disc:", err);
-      setError("Failed to renew disc. Try again.");
-    }
-  };
+     // Update local list (keep date format consistent with your list — string or Date)
+    updatedVehicles[selectedVehicleIndex].vehicleDisc = {
+      ...updatedVehicles[selectedVehicleIndex].vehicleDisc,
+      issueDate: today.toISOString().split("T")[0],
+      expiryDate: newExpiry.toISOString().split("T")[0],
+    };
+    setVehicleList(updatedVehicles);
+
+    // Prepare object to pass to VehicleDisc
+    const vehicleForDisc = {
+      ...vehicle,
+      // readable fields VehicleDisc expects (use ISO strings)
+      discIssueDate: today.toISOString(),
+      discExpiryDate: newExpiry.toISOString(),
+      // also update nested vehicleDisc if VehicleDisc reads that
+      vehicleDisc: {
+        ...vehicle.vehicleDisc,
+        issueDate: today.toISOString().split("T")[0],
+        expiryDate: newExpiry.toISOString().split("T")[0],
+      },
+      status: "Renewed",
+    };
+
+    setRenewedVehicle(vehicleForDisc); // save so UI can show the new expiry
+    setSuccess(true); // show success screen (do NOT navigate immediately)
+
+  } catch (err) {
+    console.error("Error renewing vehicle disc:", err);
+    setError("Failed to renew disc. Try again.");
+  }
+};
 
   return (
     <SharedLayout>
       <div className="container mt-4">
+        <button
+          className="btn btn-secondary mb-3"
+          onClick={() => navigate("/applicant")}
+          style={{
+                  padding: "12px 20px",
+                  borderRadius: "12px",
+                  background: "#10b981",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+        >
+          &larr; Back
+        </button>
         {!success ? (
           <>
             <h2 className="mb-4">Renew Vehicle Disc</h2>
@@ -168,7 +233,9 @@ const expiredVehicles = vehicleList.filter(
                           <p>
                             Expired on:{" "}
                             <span className="text-danger">
-                              {new Date(vehicle.vehicleDisc.expiryDate).toLocaleDateString()}
+                              {new Date(
+                                vehicle.vehicleDisc.expiryDate
+                              ).toLocaleDateString()}
                             </span>
                           </p>
                           <button
@@ -187,12 +254,19 @@ const expiredVehicles = vehicleList.filter(
 
             {step === 2 && selectedVehicleIndex !== null && (
               <div className="card p-4 shadow-sm">
-                <h4>Payment for {vehicleList[selectedVehicleIndex].vehicleName}</h4>
-                <p>License Plate: {vehicleList[selectedVehicleIndex].licensePlate}</p>
+                <h4>
+                  Payment for {vehicleList[selectedVehicleIndex].vehicleName}
+                </h4>
+                <p>
+                  License Plate:{" "}
+                  {vehicleList[selectedVehicleIndex].licensePlate}
+                </p>
                 <p>Registration Fee: R {registrationFee}</p>
                 <p>
                   Current Expiry Date:{" "}
-                  {new Date(vehicleList[selectedVehicleIndex].vehicleDisc.expiryDate).toLocaleDateString()}
+                  {new Date(
+                    vehicleList[selectedVehicleIndex].vehicleDisc.expiryDate
+                  ).toLocaleDateString()}
                 </p>
 
                 <div className="mb-3">
@@ -262,10 +336,16 @@ const expiredVehicles = vehicleList.filter(
                 {error && <p className="text-danger mt-2">{error}</p>}
 
                 <div className="mt-3">
-                  <button className="btn btn-success me-2" onClick={handleRenew}>
+                  <button
+                    className="btn btn-success me-2"
+                    onClick={handleRenew}
+                  >
                     Pay R {registrationFee} & Renew
                   </button>
-                  <button className="btn btn-secondary" onClick={() => setStep(1)}>
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setStep(1)}
+                  >
                     Back
                   </button>
                 </div>
@@ -273,18 +353,50 @@ const expiredVehicles = vehicleList.filter(
             )}
           </>
         ) : (
+          // inside return, when success === true:
           <div className="text-center p-5">
             <CheckCircle size={60} color="green" />
             <h3 className="mt-3">🎉 Disc Renewed Successfully!</h3>
             <p>
               Your vehicle disc is now valid until{" "}
-              {new Date(vehicleList[selectedVehicleIndex].vehicleDisc.expiryDate).toLocaleDateString()}
+              {new Date(
+                renewedVehicle?.discExpiryDate ||
+                  vehicleList[selectedVehicleIndex]?.vehicleDisc?.expiryDate
+              ).toLocaleDateString()}
             </p>
-            <button className="btn btn-primary mt-3" onClick={() => navigate("/vehicle-disc")}>
-              View Disc
+            <button
+              className="btn btn-primary mt-3"
+              onClick={() =>
+                navigate("/vehicle-disc", {
+                  state: {
+                    vehicle:
+                      renewedVehicle || vehicleList[selectedVehicleIndex],
+                    user,
+                    mode: "renewal",
+                  },
+                })
+              }
+            >
+              View Your New Vehicle Disc
             </button>
+            <div style={{ marginTop: "20px", textAlign: "center" }}>
+              <button
+                onClick={() => navigate("/applicant")}
+                style={{
+                  padding: "12px 20px",
+                  borderRadius: "12px",
+                  background: "#10b981",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Home
+              </button>
+            </div>
           </div>
         )}
+        
       </div>
     </SharedLayout>
   );

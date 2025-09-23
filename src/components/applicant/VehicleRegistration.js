@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Car, CreditCard, CheckCircle } from "lucide-react";
 import SharedLayout from "../sharedPages/SharedLayout";
 import ApiService from "../../services/ApiService";
+import { calculateExpiryDate } from "../applicant/utils/DateHelpers";
 
 function VehicleRegistration({ user, onClose, onComplete }) {
+  
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [success, setSuccess] = useState(false);
@@ -35,25 +37,40 @@ const dateOnly = (date) => {  // made changes
 };
 
   const registrationFee = 850;
-  const issueDate = new Date();
-  const vehicleYear = parseInt(formData.vehicleYear, 10);
-  let expiryDate;
+//   const issueDate = new Date();
+//   const vehicleYear = parseInt(formData.vehicleYear, 10);
+//   let expiryDate;
 
-  if (!isNaN(vehicleYear)) {  // made changes
-  if (vehicleYear <= 2023) {
-    expiryDate = dateOnly(new Date(issueDate.getTime() + 2 * 60 * 1000)); // demo
-  } else if (vehicleYear >= 2024 && vehicleYear <= 2026) {
-    const temp = new Date(issueDate);
-    temp.setFullYear(temp.getFullYear() + 1);
-    expiryDate = dateOnly(temp); // strip time
+//   if (!isNaN(vehicleYear)) {  // made changes
+//   if (vehicleYear <= 2023) {
+//     expiryDate = dateOnly(new Date(issueDate.getTime() + 2 * 60 * 1000)); // demo
+//   } else if (vehicleYear >= 2024 && vehicleYear <= 2026) {
+//     const temp = new Date(issueDate);
+//     temp.setFullYear(temp.getFullYear() + 1);
+//     expiryDate = dateOnly(temp); // strip time
+//   } else {
+//     const temp = new Date(issueDate);
+//     temp.setFullYear(temp.getFullYear() + 1);
+//     expiryDate = dateOnly(temp);
+//   }
+// } else {
+//   expiryDate = dateOnly(issueDate);
+// }
+const vehicleYear = parseInt(formData.vehicleYear, 10);
+const issueDate = new Date();
+let expiryDate;
+
+if (!isNaN(vehicleYear)) {
+  if (vehicleYear < 2024) {
+    expiryDate = new Date(issueDate); // expire today
   } else {
     const temp = new Date(issueDate);
-    temp.setFullYear(temp.getFullYear() + 1);
-    expiryDate = dateOnly(temp);
+    temp.setFullYear(temp.getFullYear() + 1); // expire in 1 year
+    expiryDate = temp;
   }
-} else {
-  expiryDate = dateOnly(issueDate);
+} else {  expiryDate = new Date(issueDate);
 }
+  
 
 
   const currentYear = new Date().getFullYear();
@@ -67,6 +84,10 @@ const dateOnly = (date) => {  // made changes
   const handleCancel = () => {
     if (onClose) onClose();
     else navigate(-1);
+  };
+
+  const handleHome = () => {
+    navigate("/applicant");
   };
 
   const handleContinue = async () => {
@@ -155,22 +176,45 @@ const dateOnly = (date) => {  // made changes
       return;
     }
 
-    const vehicleYear = parseInt(formData.vehicleYear, 10);
-    const issueDate = new Date();
-    let expiryDate;
+//     const vehicleYear = parseInt(formData.vehicleYear, 10);
+//     const issueDate = new Date();
+//     let expiryDate;
 
-    if (vehicleYear <= 2023) {
-      // Expire in 2 minutes (demo)
-      expiryDate = new Date(issueDate.getTime() + 2 * 60 * 1000);
-    } else if (vehicleYear >= 2024 && vehicleYear <= 2026) {
-      // Expire in 1 year
-      expiryDate = new Date(issueDate);
-      expiryDate.setFullYear(issueDate.getFullYear() + 1);
-    } else {
-      // fallback: same as 1 year just in case
-      expiryDate = new Date(issueDate);
-      expiryDate.setFullYear(issueDate.getFullYear() + 1);
-    }
+//     // Strip time helper
+// const dateOnly = (date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+// if (!isNaN(vehicleYear)) {
+//   if (vehicleYear < 2024) {
+//     // Vehicles older than 2024 expire today
+//     expiryDate = dateOnly(issueDate);
+//   } else {
+//     // Vehicles 2024 or newer expire in 1 year
+//     const temp = new Date(issueDate);
+//     temp.setFullYear(temp.getFullYear() + 1);
+//     expiryDate = dateOnly(temp);
+//   }
+// } else {
+//   // fallback
+//   expiryDate = dateOnly(issueDate);
+// }
+
+    // if (vehicleYear <= 2023) {
+    //   // Expire in 2 minutes (demo)
+    //   expiryDate = new Date(issueDate.getTime() + 2 * 60 * 1000);
+    // } else if (vehicleYear >= 2024 && vehicleYear <= 2026) {
+    //   // Expire in 1 year
+    //   expiryDate = new Date(issueDate);
+    //   expiryDate.setFullYear(issueDate.getFullYear() + 1);
+    // } else {
+    //   // fallback: same as 1 year just in case
+    //   expiryDate = new Date(issueDate);
+    //   expiryDate.setFullYear(issueDate.getFullYear() + 1);
+    // }
+
+const vehicleYear = parseInt(formData.vehicleYear, 10);
+const issueDate = new Date();
+const expiryDate = calculateExpiryDate(vehicleYear);  // ✅ use helper
+
 
     try {
       const vehiclePayload = {
@@ -186,7 +230,7 @@ const dateOnly = (date) => {  // made changes
 
         vehicleDisc: {
           issueDate: issueDate.toISOString(),
-          expiryDate: expiryDate.toISOString(),
+          expiryDate:calculateExpiryDate(vehicleYear).toISOString(),
           registrationFee: 850,
           status: "active",
         },
@@ -290,6 +334,7 @@ const dateOnly = (date) => {  // made changes
   };
 
   return (
+
     <SharedLayout>
       <div style={containerStyle}>
         <div style={cardStyle}>
@@ -304,6 +349,7 @@ const dateOnly = (date) => {  // made changes
                     <CreditCard size={40} color="#2563eb" />
                   )}
                 </div>
+                
                 <h1 style={titleStyle}>Vehicle Registration</h1>
                 <p style={subtitleStyle}>
                   {step === 1
@@ -311,7 +357,20 @@ const dateOnly = (date) => {  // made changes
                     : "Complete payment to finish registration"}
                 </p>
               </div>
-
+                <button
+          className="btn btn-secondary mb-3"
+          onClick={() => navigate("/applicant")}
+          style={{
+                  padding: "12px 20px",
+                  borderRadius: "12px",
+                  background: "#10b981",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+        >
+          &larr; Home
+        </button>
               {/* Form */}
               <form onSubmit={(e) => e.preventDefault()}>
                 {step === 1 && (
@@ -627,6 +686,7 @@ const dateOnly = (date) => {  // made changes
                   <div
                     style={{ display: "flex", gap: "12px", marginTop: "20px" }}
                   >
+              
                     <button
                       type="button"
                       onClick={handleCancel}
@@ -699,12 +759,32 @@ const dateOnly = (date) => {  // made changes
                 >
                   View Disc
                 </button>
+
+                
+  {/* ✅ NEW Home button */}
+  <button
+    onClick={() => navigate("/applicant")}
+    style={{
+      padding: "12px 20px",
+      borderRadius: "12px",
+      background: "#10b981", // Tailwind green-500 style
+      color: "white",
+      border: "none",
+      cursor: "pointer",
+    }}
+  >
+    Home
+  </button>
               </div>
             </div>
           )}
+          
         </div>
+        
       </div>
+      
     </SharedLayout>
+    
   );
 }
 
