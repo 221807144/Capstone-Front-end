@@ -13,7 +13,8 @@ import BookingDetails from "./components/applicant/BookingDetails";
 import RenewDisc from "./components/applicant/RenewDisc";
 import Payments from "./components/applicant/Payment"
 import SharedLayout from "./components/sharedPages/SharedLayout";
-import Profile from "./components/applicant/Profile";
+import VehicleProfile from "./components/applicant/VehicleProfile";
+import Profile from "./components/sharedPages/Profile";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -91,7 +92,7 @@ export default function App() {
             )
           }
         />
-
+      <Route path="/vehicle-profile" element={<VehicleProfile />} />
         <Route path="/vehicle-disc" element={<VehicleDisc />} />
         <Route path="/pay-ticket" element={<Ticket />} />
         <Route path="/booking-details/:id" element={<BookingDetails />} />

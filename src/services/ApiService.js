@@ -155,6 +155,8 @@ static async registerUser(userData) {
       throw error;
     }
   }
+
+
   
 
   // delete vehicle dashboard
@@ -169,16 +171,23 @@ static async deleteVehicle(vehicleID) {
   }
 }
 
-// // get expired vehicle disc
-// static async getExpiredVehiclesByUser(userId) {
-//   try {
-//     const response = await axios.get(`${API_BASE_URL}/vehicle/expired/${userId}`);
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error fetching expired vehicles:", error.response?.data || error.message);
-//     throw error;
-//   }
-// }
+// update vehicle
+static async updateVehicle(vehicleID, vehicleData) {
+  try {
+    // Include vehicleID in the object because backend expects full vehicle object
+    const response = await axios.put(`${API_BASE_URL}/vehicle/update`, {
+      ...vehicleData,
+      vehicleID,
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error updating vehicle:",
+      error.response?.data || error.message
+    );
+    throw error;
+  }
+}
 
 // // Fetch all expired vehicles (not per user)
 static async getExpiredVehicles() {

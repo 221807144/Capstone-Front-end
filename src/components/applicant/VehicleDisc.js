@@ -13,11 +13,23 @@ function VehicleDisc() {
   const discIssueDate = vehicle.discIssueDate
     ? new Date(vehicle.discIssueDate)
     : new Date();
-  const discExpiryDate = vehicle.discExpiryDate
-    ? new Date(vehicle.discExpiryDate)
-    : new Date(
-        new Date(discIssueDate).setFullYear(discIssueDate.getFullYear() + 5)
-      );
+
+let discExpiryDate;
+
+// If renewal → always issue date + 1 year
+if (vehicle.status === "Renewed") {
+  discExpiryDate = new Date(discIssueDate);
+  discExpiryDate.setFullYear(discIssueDate.getFullYear() + 1);
+} else {
+  // Registration logic based on vehicle year
+  const vehicleYear = Number(vehicle.vehicleYear);
+  if (!isNaN(vehicleYear) && vehicleYear > 2024) {
+    discExpiryDate = new Date(discIssueDate);
+    discExpiryDate.setFullYear(discIssueDate.getFullYear() + 1);
+  } else {
+    discExpiryDate = new Date(); // same-day expiry for old cars
+  }
+}
 
   // Function to download as PDF (using print functionality)
   const downloadAsPDF = () => {

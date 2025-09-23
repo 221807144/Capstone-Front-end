@@ -20,6 +20,9 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
   const [licenseNumber, setLicenseNumber] = useState("");
   const [userLicenseInfo, setUserLicenseInfo] = useState(null);
   const [userVehicles, setUserVehicles] = useState([]);
+
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [userLicense, setUserLicense] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -101,6 +104,7 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       description: "Renew your vehicle disc",
       image: disc,
       action: () => navigate("/renew-disc", { state: { user: userData } }),
+      action: () => navigate("/renew-disc", { state: { user: userData } }),
       requires: null,
     },
     {
@@ -117,24 +121,62 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       action: () => navigate("/payments"),
       requires: null,
     },
+    {
+      title: "Payments History",
+      description: "View payments for the user",
+      image: payTicketImg,
+      action: () => navigate("/payments"),
+      requires: null,
+    },
   ];
 
-  // delete vehicle
-  const handleDeleteVehicle = (vehicleID) => {
-    const confirmed = window.confirm("Are you sure you want to delete this vehicle?");
-    if (confirmed) {
-      ApiService.deleteVehicle(vehicleID)
-        .then(() => {
-          alert("Deleted successfully");
-          setUserVehicles(userVehicles.filter(v => v.vehicleID !== vehicleID));
-        })
-        .catch((err) => {
-          console.error(err);
-          alert("Couldn't delete the vehicle");
-        });
-    } else {
+  // delete
+  const handleDeleteVehicle = async (vehicleID) => {
+    // Ask user for confirmation
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this vehicle?"
+    );
+    if (!confirmed) {
       alert("Vehicle not deleted");
+      return;
     }
+
+    try {
+      // Call API to delete vehicle
+      const response = await ApiService.deleteVehicle(vehicleID);
+
+      // Check if backend confirmed deletion
+      if (response && response === "Vehicle deleted successfully") {
+        alert("Vehicle deleted successfully");
+        // Update UI by removing vehicle from state
+        setUserVehicles((prevVehicles) =>
+          prevVehicles.filter((v) => v.vehicleID !== vehicleID)
+        );
+      } else {
+        // Backend returned a message indicating failure
+        console.error("Vehicle deletion failed. Backend response:", response);
+        alert(response || "Could not delete vehicle. Please try again.");
+      }
+    } catch (error) {
+      // Log full error details in console
+      console.error(
+        "Error deleting vehicle:",
+        error.response?.data || error.message,
+        error
+      );
+      alert(
+        error.response?.data || "An error occurred while deleting the vehicle."
+      );
+    }
+  };
+  // view vehicle
+  const handleViewVehicle = (vehicle) => {
+    navigate("/vehicle-profile", {
+      state: {
+        vehicle,
+        user: userData,
+      },
+    });
   };
 
   const canAccessService = (service) => {
@@ -169,17 +211,7 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
     return "★".repeat(rating) + "☆".repeat(5 - rating);
   };
 
-  if (loading) {
-    return (
-      <div className="container-fluid px-0">
-        <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // view vehicle modal close
 
   return (
     <div className="container-fluid px-0">
@@ -397,14 +429,23 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
                                 License Number: {vehicle.licensePlate}
                               </p>
                             </div>
-                            <button
-                              className="btn btn-danger btn-sm"
-                              onClick={() =>
-                                handleDeleteVehicle(vehicle.vehicleID)
-                              }
-                            >
-                              Delete
-                            </button>
+
+                            <div className="d-flex gap-2">
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => handleViewVehicle(vehicle)}
+                              >
+                                View
+                              </button>
+                              <button
+                                className="btn btn-danger btn-sm"
+                                onClick={() =>
+                                  handleDeleteVehicle(vehicle.vehicleID)
+                                }
+                              >
+                                Delete
+                              </button>
+                            </div>
                           </div>
                         ))
                       ) : (
@@ -562,5 +603,6 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       )}
       {showLicenseModal && <div className="modal-backdrop show"></div>}
     </div>
-  );
+    // </SharedLayout>
+  );
 }
