@@ -14,7 +14,7 @@ import RenewDisc from "./components/applicant/RenewDisc";
 import Payments from "./components/applicant/Payment"
 import SharedLayout from "./components/sharedPages/SharedLayout";
 import VehicleProfile from "./components/applicant/VehicleProfile";
-import Profile from "./components/sharedPages/Profile";
+import Profile from "./components/applicant/Profile";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -57,7 +57,7 @@ export default function App() {
         <Route path="/" element={<LoginScreen onLogin={handleLogin} />} />
         <Route path="/register" element={<RegistrationStep1 onNext={handleRegisterNext} />} />
         <Route path="/payments" element={<Payments user={user} />} />
-        <Route path="/profile" element={<Profile userId={user?.userId} />} />
+        {/* <Route path="/profile" element={<Profile userId={user?.userId} />} /> */}
       
  
 
@@ -98,7 +98,7 @@ export default function App() {
         <Route path="/booking-details/:id" element={<BookingDetails />} />
         <Route path="/renew-disc" element={<RenewDisc />} />
 
-        <Route
+        {/* <Route
   path="/profile"
   element={
     user ? (
@@ -107,7 +107,7 @@ export default function App() {
       <Navigate to="/" replace />
     )
   }
-/>
+/> */}
  
 
 
@@ -138,9 +138,8 @@ export default function App() {
         <Route 
           path="/profile" 
           element={
-            <SharedLayout>
+            
               <Profile userId={user?.userId} />
-            </SharedLayout>
           } 
         />
        

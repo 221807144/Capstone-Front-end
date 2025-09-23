@@ -104,7 +104,7 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       description: "Renew your vehicle disc",
       image: disc,
       action: () => navigate("/renew-disc", { state: { user: userData } }),
-      action: () => navigate("/renew-disc", { state: { user: userData } }),
+      // action: () => navigate("/renew-disc", { state: { user: userData } }),
       requires: null,
     },
     {
@@ -121,13 +121,13 @@ export default function ApplicantDashboard({ userData, bookings, vehicles }) {
       action: () => navigate("/payments"),
       requires: null,
     },
-    {
-      title: "Payments History",
-      description: "View payments for the user",
-      image: payTicketImg,
-      action: () => navigate("/payments"),
-      requires: null,
-    },
+    // {
+    //   title: "Payments History",
+    //   description: "View payments for the user",
+    //   image: payTicketImg,
+    //   action: () => navigate("/payments"),
+    //   requires: null,
+    // },
   ];
 
   // delete
