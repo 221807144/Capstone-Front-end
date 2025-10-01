@@ -445,6 +445,67 @@ static async updateTicket(id, ticketData) {
     throw error;
   }
 }
+// In ApiService.js - UPDATE THESE METHODS:
+
+static async deleteApplicant(id) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/admins/applicants/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting applicant:", error.response || error.message);
+    throw error;
+  }
+}
+
+static async deleteBooking(id) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/admins/bookings/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting booking:", error.response || error.message);
+    throw error;
+  }
+}
+
+static async deletePayment(id) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/admins/payments/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting payment:", error.response || error.message);
+    throw error;
+  }
+}
+
+static async deleteTestAppointment(id) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/admins/test-appointments/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting test appointment:", error.response || error.message);
+    throw error;
+  }
+}
+
+static async deleteVehicleDisc(id) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/admins/vehicle-discs/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting vehicle disc:", error.response || error.message);
+    throw error;
+  }
+}
+
+static async deleteTicket(id) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/admins/tickets/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting ticket:", error.response || error.message);
+    throw error;
+  }
+}
 
 }
 
