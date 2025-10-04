@@ -39,9 +39,7 @@ const Ticket = ({ user }) => {
     };
 
     const getVehicleDisplayName = (ticket) => {
-        console.log(tickets);
         const vehicle = ticket.vehicle;
-        console.log(vehicle)
         if (!vehicle) return "Unknown Vehicle";
         return `${vehicle.vehicleName || "Unknown"} ${vehicle.vehicleModel || "Vehicle"} (${vehicle.licensePlate || "No Plate"})`;
     }
@@ -70,55 +68,57 @@ const Ticket = ({ user }) => {
             }
 
             const paymentData = {
-                paymentType: "Ticket",
-                paymentMethod: paymentMethod === "Card" ? "Card" : "Cash",
+                paymentType: "Ticket", // make sure this matches your enum
+                paymentMethod: paymentMethod,
                 paymentAmount: selectedTicket.ticketAmount,
-                paymentDate: new Date().toISOString().split('T')[0],
+                paymentDate: new Date().toISOString().split("T")[0],
                 paymentDetails: `Payment for vehicle ticket in violation of: ${selectedTicket.ticketType}`,
                 user: { userId: parseInt(userId) }
             };
 
-            if (paymentMethod === "CARD") {
-                paymentData.cardholderName = formData.get('cardholderName');
-                paymentData.cardNumber = formData.get('cardNumber');
-                paymentData.expiryDate = formData.get('expiryDate');
-                paymentData.cvv = parseInt(formData.get('cvv'));
+            if (paymentMethod === "Card") {
+                paymentData.cardholderName = formData.get("cardholderName");
+                paymentData.cardNumber = formData.get("cardNumber");
+                paymentData.expiryDate = formData.get("expiryDate");
+                paymentData.cvv = parseInt(formData.get("cvv"));
             }
 
             console.log("Submitting payment for user:", userId, paymentData);
 
+            // 1️⃣ Create payment
             const paymentResponse = await ApiService.createPayment(paymentData);
             console.log("Payment response:", paymentResponse);
 
+            // 2️⃣ Update ticket with payment
             const updatedTicket = {
-                ticketId: selectedTicket.ticketId,
-                ticketAmount: selectedTicket.ticketAmount,
-                issueDate: selectedTicket.issueDate,
-                ticketType: selectedTicket.ticketType,
+                ...selectedTicket,
                 status: "PAID",
-                vehicle: selectedTicket.vehicle,
-                payment: {
-                    paymentId: paymentResponse.paymentId
-                }
+                payment: { paymentId: paymentResponse.paymentId }
             };
 
-            console.log("Updating ticket with:", updatedTicket);
-
             await ApiService.updateTicket(updatedTicket);
+            console.log("Ticket updated:", updatedTicket);
 
+            // 3️⃣ Show success and refresh data
             alert("Payment processed successfully!");
+
+            // Close the modal
             setShowPaymentForm(false);
             setSelectedTicket(null);
 
+            // 4️⃣ 🔁 Refresh tickets automatically
+            await fetchTickets(userId);
+
         } catch (err) {
             console.error("Payment error:", err);
-            const errorMessage = err.response?.data?.message ||
-                "Payment failed. Please try again.";
+            const errorMessage =
+                err.response?.data?.message || "Payment failed. Please try again.";
             setError(errorMessage);
         } finally {
             setProcessingPayment(false);
         }
     };
+
 
     const totalTickets = tickets.length;
     const totalDue = tickets
@@ -197,8 +197,8 @@ const Ticket = ({ user }) => {
                             <div className="form-group">
                                 <label>Payment Method</label>
                                 <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
-                                    <option value="CARD">Credit Card</option>
-                                    <option value="CASH">Cash</option>
+                                    <option value="Card">Credit Card</option>
+                                    <option value="Cash">Cash</option>
                                 </select>
                             </div>
 
