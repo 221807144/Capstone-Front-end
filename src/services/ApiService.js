@@ -342,6 +342,8 @@ static async updateVehicle(formData) {
         }
     }
 
+    //This is probably draining you
+
 
     // ------------------ APPLICANT STATUS ------------------
     static async updateApplicantStatus(id, {status, reason}) {

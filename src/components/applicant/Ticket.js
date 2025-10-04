@@ -53,6 +53,8 @@ const Ticket = ({ user }) => {
         setShowPaymentForm(true);
     };
 
+    //Hey Future me
+
     const handlePaymentSubmit = async (e) => {
         e.preventDefault();
         setError("");
