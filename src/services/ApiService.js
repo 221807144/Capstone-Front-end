@@ -392,7 +392,7 @@ static async updateVehicle(formData) {
 // src/services/ApiService.js
 
 
-// Payment functions
+    // ----------Tickets Functions--------------//
 
     static async getAllPayments() {
         try {
@@ -424,7 +424,7 @@ static async updateVehicle(formData) {
         }
     }
 
-    // Tickets Functions
+    // ----------Tickets Functions--------------//
 
     // Get all tickets
     static async getAllTickets() {
@@ -437,7 +437,7 @@ static async updateVehicle(formData) {
         }
     }
 
-// Update a ticket
+    // Update a ticket
     static async updateTicket(ticketData) {
         try {
             return await axios.put(`${API_BASE_URL}/tickets/update`, ticketData);
@@ -446,6 +446,7 @@ static async updateVehicle(formData) {
             throw error;
         }
     }
+
     // Get all tickets for a specific applicant (all their vehicles)
     static async getTicketsByApplicant(userId) {
         try {

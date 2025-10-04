@@ -38,10 +38,14 @@ const Ticket = ({ user }) => {
         }
     };
 
-    const getVehicleDisplayName = (vehicle) => {
+    const getVehicleDisplayName = (ticket) => {
+        console.log(tickets);
+        const vehicle = ticket.vehicle;
+        console.log(vehicle)
         if (!vehicle) return "Unknown Vehicle";
-        return `${vehicle.make || "Unknown"} ${vehicle.model || "Vehicle"} (${vehicle.licensePlate || "No Plate"})`;
-    };
+        return `${vehicle.vehicleName || "Unknown"} ${vehicle.vehicleModel || "Vehicle"} (${vehicle.licensePlate || "No Plate"})`;
+    }
+
 
     const handlePayTicket = (ticket) => {
         setSelectedTicket(ticket);
@@ -68,7 +72,7 @@ const Ticket = ({ user }) => {
                 paymentMethod: paymentMethod === "Card" ? "Card" : "Cash",
                 paymentAmount: selectedTicket.ticketAmount,
                 paymentDate: new Date().toISOString().split('T')[0],
-                paymentDetails: `Payment for ${selectedTicket.ticketType} ticket (ID: ${selectedTicket.ticketId}) - Vehicle: ${getVehicleDisplayName(selectedTicket.vehicle)}`,
+                paymentDetails: `Payment for ${selectedTicket.ticketType} - Vehicle: ${getVehicleDisplayName(selectedTicket.vehicle)}`,
                 user: { userId: parseInt(userId) }
             };
 
@@ -135,10 +139,7 @@ const Ticket = ({ user }) => {
 
             {error && <div className="error-message">{error}</div>}
 
-            {/* Back Button */}
-            <div className="back-button-container">
-                <button className="back-button" onClick={() => navigate(-1)}>⬅ Back</button>
-            </div>
+
 
             {/* Summary Cards */}
             <div className="summary-cards">
@@ -163,7 +164,10 @@ const Ticket = ({ user }) => {
                         <div key={ticket.ticketId || index} className="ticket-card">
                             <div className="ticket-type-badge">{ticket.ticketType?.replace(/_/g, " ") || "Violation"}</div>
                             <h3>Ticket #{ticket.ticketId}</h3>
-                            <p className="vehicle-info"><strong>Vehicle:</strong> {getVehicleDisplayName(ticket.vehicle)}</p>
+                            <p className="vehicle-info">
+                                <strong>Vehicle:</strong>{" "}
+                                {getVehicleDisplayName(ticket)}
+                            </p>
                             <p><strong>Amount:</strong> R{ticket.ticketAmount}</p>
                             <p><strong>Status:</strong> {ticket.status}</p>
                             <p><strong>Issued:</strong> {ticket.issueDate ? new Date(ticket.issueDate).toLocaleDateString() : "Unknown"}</p>
@@ -176,6 +180,11 @@ const Ticket = ({ user }) => {
                     ))}
                 </div>
             )}
+
+            {/* Back Button */}
+            <div className="back-button-container">
+                <button className="back-button" onClick={() => navigate(-1)}>⬅ Back to dashboard</button>
+            </div>
 
             {/* Payment Modal */}
             {showPaymentForm && selectedTicket && (
