@@ -169,24 +169,23 @@ class ApiService {
             throw error;
         }
     }
-
 // update vehicle
-    static async updateVehicle(vehicleID, vehicleData) {
-        try {
-            // Include vehicleID in the object because backend expects full vehicle object
-            const response = await axios.put(`${API_BASE_URL}/vehicle/update`, {
-                ...vehicleData,
-                vehicleID,
-            });
-            return response.data;
-        } catch (error) {
-            console.error(
-                "Error updating vehicle:",
-                error.response?.data || error.message
-            );
-            throw error;
-        }
+static async updateVehicle(formData) {
+    try {
+        const response = await axios.put(`${API_BASE_URL}/vehicle/update`, formData, {
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error(
+            "Error updating vehicle:",
+            error.response?.data || error.message
+        );
+        throw error;
     }
+}
 
 
 
