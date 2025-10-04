@@ -8,6 +8,7 @@ export default function Payments({ user }) {
     const [payments, setPayments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [filterType, setFilterType] = useState("All"); // 🔹 filter state
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,34 +25,19 @@ export default function Payments({ user }) {
             setLoading(true);
             setError(null);
 
-            // API returns the array directly, not nested under 'data'
             const paymentsData = await ApiService.getAllPayments();
-            console.log("Raw payments data:", paymentsData);
-
-            // Ensure we have an array
             if (!Array.isArray(paymentsData)) {
-                console.warn("Payments data is not an array:", paymentsData);
                 setPayments([]);
                 return;
             }
 
-            // Debug: Check the structure of payment objects
-            if (paymentsData.length > 0) {
-                console.log("First payment object:", paymentsData[0]);
-                console.log("User object:", user);
-            }
-
-            // Filter payments for current user - check different possible structures
             const userPayments = paymentsData.filter(payment => {
-                // Check different possible ways the user ID might be stored
                 return payment.userId === user.userId ||
                     (payment.user && payment.user.userId === user.userId) ||
                     (payment.applicant && payment.applicant.userId === user.userId);
             });
 
-            console.log("Filtered user payments:", userPayments);
             setPayments(userPayments);
-
         } catch (err) {
             setError("Failed to fetch payments. Please try again later.");
             console.error("Error fetching payments:", err);
@@ -65,13 +51,16 @@ export default function Payments({ user }) {
         navigate("/applicant");
     };
 
+    // 🔹 Apply filter
+    const filteredPayments = filterType === "All"
+        ? payments
+        : payments.filter(p => p.paymentType === filterType);
+
     if (loading) {
         return (
-            <div className="payments-container">
-                <div className="d-flex justify-content-center align-items-center" style={{ height: "50vh" }}>
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
+            <div className="payments-container d-flex justify-content-center align-items-center" style={{ height: "50vh" }}>
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
                 </div>
             </div>
         );
@@ -79,16 +68,12 @@ export default function Payments({ user }) {
 
     if (error) {
         return (
-            <div className="payments-container">
-                <div className="container py-5">
-                    <div className="alert alert-danger text-center fs-5">
-                        {error}
-                    </div>
-                    <div className="text-center">
-                        <button className="btn btn-outline-primary" onClick={handleBackToDashboard}>
-                            <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
-                        </button>
-                    </div>
+            <div className="payments-container container py-5">
+                <div className="alert alert-danger text-center fs-5">{error}</div>
+                <div className="text-center">
+                    <button className="btn btn-outline-primary" onClick={handleBackToDashboard}>
+                        <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
+                    </button>
                 </div>
             </div>
         );
@@ -111,15 +96,31 @@ export default function Payments({ user }) {
                     </div>
                 </div>
 
-                {payments.length === 0 ? (
+                {/* 🔹 Filter Dropdown */}
+                <div className="mb-4 text-end">
+                    <label className="me-2 fw-semibold">Filter by Type:</label>
+                    <select
+                        className="form-select d-inline-block"
+                        style={{ width: "200px" }}
+                        value={filterType}
+                        onChange={(e) => setFilterType(e.target.value)}
+                    >
+                        <option value="All">All</option>
+                        <option value="Ticket">Ticket</option>
+                        <option value="Booking">Booking</option>
+                        <option value="Disc">Disc</option>
+                    </select>
+                </div>
+
+                {filteredPayments.length === 0 ? (
                     <div className="text-center">
                         <div className="alert alert-info text-center fs-5">
-                            No payment history found for your account
+                            No payment history found {filterType !== "All" ? `for ${filterType}` : ""}
                         </div>
                         <button
                             className="btn btn-outline-primary"
                             onClick={handleBackToDashboard}
-                            style={{ whiteSpace: 'nowrap' }}
+                            style={{ whiteSpace: "nowrap" }}
                         >
                             <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
                         </button>
@@ -142,7 +143,7 @@ export default function Payments({ user }) {
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {payments.map((payment) => (
+                                {filteredPayments.map((payment) => (
                                     <tr key={payment.paymentId}>
                                         <td>{payment.paymentId}</td>
                                         <td>R {payment.paymentAmount?.toFixed(2) || "0.00"}</td>
