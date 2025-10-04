@@ -94,7 +94,7 @@ export default function App() {
         />
       <Route path="/vehicle-profile" element={<VehicleProfile />} />
         <Route path="/vehicle-disc" element={<VehicleDisc />} />
-        <Route path="/pay-ticket" element={<Ticket />} />
+        <Route path="/pay-ticket" element={<Ticket user ={user} />} />
         <Route path="/booking-details/:id" element={<BookingDetails />} />
         <Route path="/renew-disc" element={<RenewDisc />} />
 

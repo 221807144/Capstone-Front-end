@@ -1,281 +1,239 @@
-// Ticket.js
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ApiService from "../../services/ApiService";
 import "./Ticket.css";
 
-const Ticket = () => {
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [selectedTicket, setSelectedTicket] = useState(null);
-  const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("CARD");
-  const navigate = useNavigate();
+const Ticket = ({ user }) => {
+    const [tickets, setTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [selectedTicket, setSelectedTicket] = useState(null);
+    const [showPaymentForm, setShowPaymentForm] = useState(false);
+    const [paymentMethod, setPaymentMethod] = useState("CARD");
+    const [processingPayment, setProcessingPayment] = useState(false);
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
+    const navigate = useNavigate();
+    const getUserId = () => user?.userId || user?.id || localStorage.getItem("userId");
 
-  const fetchTickets = async () => {
-    try {
-      setLoading(true);
-      const response = await ApiService.getAllTickets();
-      setTickets(response.data);
-    } catch (err) {
-      setError("Failed to fetch tickets. Please try again later.");
-      console.error("Error fetching tickets:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    useEffect(() => {
+        const userId = getUserId();
+        if (userId) fetchTickets(userId);
+        else {
+            setError("User not logged in. Please log in to view your tickets.");
+            setLoading(false);
+        }
+    }, [user]);
 
-  const handlePayTicket = (ticket) => {
-    setSelectedTicket(ticket);
-    setPaymentMethod("CARD");
-    setShowPaymentForm(true);
-  };
-
-  const handlePaymentSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  
-  try {
-    const formData = new FormData(e.target);
-    
-    // Prepare payment data according to backend expectations
-    const paymentData = {
-      paymentType: "Ticket",
-      paymentMethod: paymentMethod === "CARD" ? "Card" : "Cash",
-      paymentAmount: selectedTicket.ticketAmount,
-      paymentDate: new Date().toISOString().split('T')[0],
-      paymentDetails: `Payment for ${selectedTicket.ticketType} ticket (ID: ${selectedTicket.ticketId})`,
-      user: { userId: 1 } // This should come from your authentication context
+    const fetchTickets = async (userId) => {
+        try {
+            setLoading(true);
+            setError("");
+            const ticketsResponse = await ApiService.getTicketsByApplicant(userId);
+            setTickets(ticketsResponse || []);
+        } catch (err) {
+            console.error("Error fetching tickets:", err);
+            setError("Failed to fetch tickets.");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    // Only add card details if payment method is card
-    if (paymentMethod === "CARD") {
-      paymentData.cardholderName = formData.get('cardholderName');
-      paymentData.cardNumber = parseInt(formData.get('cardNumber'));
-      paymentData.expiryDate = formData.get('expiryDate');
-      paymentData.cvv = parseInt(formData.get('cvv'));
-    }
+    const getVehicleDisplayName = (vehicle) => {
+        if (!vehicle) return "Unknown Vehicle";
+        return `${vehicle.make || "Unknown"} ${vehicle.model || "Vehicle"} (${vehicle.licensePlate || "No Plate"})`;
+    };
 
-    console.log("Submitting payment data:", paymentData);
+    const handlePayTicket = (ticket) => {
+        setSelectedTicket(ticket);
+        setPaymentMethod("CARD");
+        setShowPaymentForm(true);
+    };
 
-    // Create payment
-    const paymentResponse = await ApiService.createPayment(paymentData);
-    console.log("Payment created successfully:", paymentResponse.data);
+    const handlePaymentSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setProcessingPayment(true);
 
-    // Try to update the ticket, but handle CORS errors gracefully
-    try {
-      // Update ticket status to paid
-      const updatedTicket = {
-        ...selectedTicket,
-        status: "PAID",
-        payment: paymentResponse.data
-      };
-      
-      console.log("Updating ticket with:", updatedTicket);
-      await ApiService.updateTicket(selectedTicket.ticketId, updatedTicket);
-    } catch (updateError) {
-      console.warn("Ticket update failed due to CORS, but payment was successful:", updateError);
-      // Continue with success flow since payment was created
-    }
+        try {
+            const formData = new FormData(e.target);
+            const userId = getUserId();
 
-    alert("Payment processed successfully! Your ticket has been paid.");
-    setShowPaymentForm(false);
-    setSelectedTicket(null);
-    fetchTickets(); // Refresh the list
-  } catch (err) {
-    console.error("Payment error details:", err);
-    const errorMessage = err.response?.data?.message || 
-                         err.message || 
-                         "Payment failed. Please try again.";
-    setError(errorMessage);
-  }
-};
+            if (!userId) {
+                setError("User not identified. Please log in again.");
+                return;
+            }
 
-  if (loading) return (
-    <div className="ticket-container">
-      <div className="loading-spinner"></div>
-      <p>Loading tickets...</p>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="ticket-container">
-      <div className="error-message">{error}</div>
-      <button className="retry-btn" onClick={fetchTickets}>Try Again</button>
-    </div>
-  );
+            const paymentData = {
+                paymentType: "Ticket",
+                paymentMethod: paymentMethod === "Card" ? "Card" : "Cash",
+                paymentAmount: selectedTicket.ticketAmount,
+                paymentDate: new Date().toISOString().split('T')[0],
+                paymentDetails: `Payment for ${selectedTicket.ticketType} ticket (ID: ${selectedTicket.ticketId}) - Vehicle: ${getVehicleDisplayName(selectedTicket.vehicle)}`,
+                user: { userId: parseInt(userId) }
+            };
 
-  return (
-    <div className="ticket-container">
-      <div className="ticket-header">
-        <h2>My Traffic Tickets</h2>
-        <p>View and manage your traffic violations</p>
-      </div>
-      
-      {tickets.length === 0 ? (
-        <div className="no-tickets">
-          <div className="no-tickets-icon">🎉</div>
-          <h3>No outstanding tickets</h3>
-          <p>You have no traffic violations at this time.</p>
+            if (paymentMethod === "CARD") {
+                paymentData.cardholderName = formData.get('cardholderName');
+                paymentData.cardNumber = formData.get('cardNumber');
+                paymentData.expiryDate = formData.get('expiryDate');
+                paymentData.cvv = parseInt(formData.get('cvv'));
+            }
+
+            console.log("Submitting payment for user:", userId, paymentData);
+
+            const paymentResponse = await ApiService.createPayment(paymentData);
+            console.log("Payment response:", paymentResponse);
+
+            const updatedTicket = {
+                ticketId: selectedTicket.ticketId,
+                ticketAmount: selectedTicket.ticketAmount,
+                issueDate: selectedTicket.issueDate,
+                ticketType: selectedTicket.ticketType,
+                status: "PAID",
+                vehicle: selectedTicket.vehicle,
+                payment: {
+                    paymentId: paymentResponse.paymentId
+                }
+            };
+
+            console.log("Updating ticket with:", updatedTicket);
+
+            await ApiService.updateTicket(updatedTicket);
+
+            alert("Payment processed successfully!");
+            setShowPaymentForm(false);
+            setSelectedTicket(null);
+
+        } catch (err) {
+            console.error("Payment error:", err);
+            const errorMessage = err.response?.data?.message ||
+                "Payment failed. Please try again.";
+            setError(errorMessage);
+        } finally {
+            setProcessingPayment(false);
+        }
+    };
+
+    const totalTickets = tickets.length;
+    const totalDue = tickets
+        .filter(ticket => ticket.status === "UNPAID")
+        .reduce((sum, ticket) => sum + (ticket.ticketAmount || 0), 0);
+
+    if (loading) return (
+        <div className="ticket-container">
+            <div className="loading-spinner"></div>
+            <p>Loading your tickets...</p>
         </div>
-      ) : (
-        <div className="tickets-grid">
-          {tickets.map((ticket) => (
-            <div key={ticket.ticketId} className="ticket-card">
-              <div className="ticket-type-badge">{ticket.ticketType.replace(/_/g, ' ')}</div>
-              <div className="ticket-info">
-                <h3>Ticket #{ticket.ticketId}</h3>
-                <div className="ticket-details">
-                  <div className="detail-item">
-                    <span className="label">Amount:</span>
-                    <span className="value">R{ticket.ticketAmount}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Issued:</span>
-                    <span className="value">{new Date(ticket.issueDate).toLocaleDateString()}</span>
-                  </div>
-                  <div className="detail-item">
-                    <span className="label">Status:</span>
-                    <span className={`status ${ticket.status.toLowerCase()}`}>
-                      {ticket.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              
-              {ticket.status === "UNPAID" && (
-                <button 
-                  className="pay-button"
-                  onClick={() => handlePayTicket(ticket)}
-                >
-                  Pay Now
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+    );
 
-      {showPaymentForm && selectedTicket && (
-        <div className="payment-modal-overlay">
-          <div className="payment-modal">
-            <div className="modal-header">
-              <h3>Pay Ticket #{selectedTicket.ticketId}</h3>
-              <button 
-                className="close-btn"
-                onClick={() => setShowPaymentForm(false)}
-              >
-                &times;
-              </button>
+    return (
+        <div className="ticket-container">
+            <div className="ticket-header">
+                <h2>My Traffic Tickets</h2>
+                <p>View and manage all your traffic violations</p>
             </div>
-            
-            <div className="payment-summary">
-              <p><strong>Violation:</strong> {selectedTicket.ticketType.replace(/_/g, ' ')}</p>
-              <p><strong>Amount Due:</strong> R{selectedTicket.ticketAmount}</p>
-              <p><strong>Issue Date:</strong> {new Date(selectedTicket.issueDate).toLocaleDateString()}</p>
+
+            {error && <div className="error-message">{error}</div>}
+
+            {/* Back Button */}
+            <div className="back-button-container">
+                <button className="back-button" onClick={() => navigate(-1)}>⬅ Back</button>
             </div>
-            
-            <form onSubmit={handlePaymentSubmit} className="payment-form">
-              <div className="form-group">
-                <label>Payment Method:</label>
-                <div className="payment-method-toggle">
-                  <button
-                    type="button"
-                    className={paymentMethod === "CARD" ? "active" : ""}
-                    onClick={() => setPaymentMethod("CARD")}
-                  >
-                    Credit Card
-                  </button>
-                  <button
-                    type="button"
-                    className={paymentMethod === "CASH" ? "active" : ""}
-                    onClick={() => setPaymentMethod("CASH")}
-                  >
-                    Cash
-                  </button>
+
+            {/* Summary Cards */}
+            <div className="summary-cards">
+                <div className="summary-card blue-card">
+                    <h4>Total Tickets</h4>
+                    <p>{totalTickets}</p>
                 </div>
-              </div>
-              
-              {paymentMethod === "CARD" && (
-                <>
-                  <div className="form-group">
-                    <label htmlFor="cardholderName">Cardholder Name</label>
-                    <input 
-                      type="text" 
-                      id="cardholderName"
-                      name="cardholderName" 
-                      placeholder="John Doe" 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label htmlFor="cardNumber">Card Number</label>
-                    <input 
-                      type="number" 
-                      id="cardNumber"
-                      name="cardNumber" 
-                      placeholder="1234567812345678" 
-                      required 
-                    />
-                  </div>
-                  
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label htmlFor="expiryDate">Expiry Date</label>
-                      <input 
-                        type="month" 
-                        id="expiryDate"
-                        name="expiryDate" 
-                        required 
-                      />
+                <div className="summary-card blue-card">
+                    <h4>Total Due</h4>
+                    <p>R{totalDue.toFixed(2)}</p>
+                </div>
+            </div>
+
+            {/* Tickets Grid */}
+            {tickets.length === 0 ? (
+                <div className="no-tickets">
+                    <h3>No tickets found.</h3>
+                </div>
+            ) : (
+                <div className="tickets-grid">
+                    {tickets.map((ticket, index) => (
+                        <div key={ticket.ticketId || index} className="ticket-card">
+                            <div className="ticket-type-badge">{ticket.ticketType?.replace(/_/g, " ") || "Violation"}</div>
+                            <h3>Ticket #{ticket.ticketId}</h3>
+                            <p className="vehicle-info"><strong>Vehicle:</strong> {getVehicleDisplayName(ticket.vehicle)}</p>
+                            <p><strong>Amount:</strong> R{ticket.ticketAmount}</p>
+                            <p><strong>Status:</strong> {ticket.status}</p>
+                            <p><strong>Issued:</strong> {ticket.issueDate ? new Date(ticket.issueDate).toLocaleDateString() : "Unknown"}</p>
+                            {ticket.status === "UNPAID" && (
+                                <button className="pay-button" onClick={() => handlePayTicket(ticket)} disabled={processingPayment}>
+                                    {processingPayment ? "Processing..." : "Pay Now"}
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* Payment Modal */}
+            {showPaymentForm && selectedTicket && (
+                <div className="payment-modal-overlay">
+                    <div className="payment-modal">
+                        <h3>Pay Ticket #{selectedTicket.ticketId}</h3>
+                        <form onSubmit={handlePaymentSubmit} className="payment-form">
+                            <div className="form-group">
+                                <label>Payment Method</label>
+                                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
+                                    <option value="CARD">Credit Card</option>
+                                    <option value="CASH">Cash</option>
+                                </select>
+                            </div>
+
+                            {paymentMethod === "CARD" && (
+                                <>
+                                    <div className="form-group">
+                                        <label>Cardholder Name</label>
+                                        <input name="cardholderName" placeholder="John Doe" required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Card Number</label>
+                                        <input name="cardNumber" placeholder="1234 5678 9012 3456" required />
+                                    </div>
+                                    <div className="form-row">
+                                        <div className="form-group">
+                                            <label>Expiry Date</label>
+                                            <input type="month" name="expiryDate" required />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>CVV</label>
+                                            <input type="number" name="cvv" placeholder="123" required min="100" max="999" />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+
+                            {paymentMethod === "CASH" && (
+                                <div className="cash-note">
+                                    💵 Please pay at your nearest traffic department office.
+                                </div>
+                            )}
+
+                            <div className="form-actions">
+                                <button type="submit" className="submit-btn" disabled={processingPayment}>
+                                    {processingPayment ? "Processing..." : "Confirm Payment"}
+                                </button>
+                                <button type="button" className="cancel-btn" onClick={() => setShowPaymentForm(false)} disabled={processingPayment}>
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    
-                    <div className="form-group">
-                      <label htmlFor="cvv">CVV</label>
-                      <input 
-                        type="number" 
-                        id="cvv"
-                        name="cvv" 
-                        placeholder="123" 
-                        min="100" 
-                        max="999" 
-                        required 
-                      />
-                    </div>
-                  </div>
-                </>
-              )}
-              
-              {paymentMethod === "CASH" && (
-                <div className="cash-note">
-                  <p>💵 You've selected cash payment. Please visit your nearest traffic department office to complete the payment.</p>
                 </div>
-              )}
-              
-              <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="cancel-btn"
-                  onClick={() => setShowPaymentForm(false)}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  Confirm Payment
-                </button>
-              </div>
-            </form>
-          </div>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default Ticket;
