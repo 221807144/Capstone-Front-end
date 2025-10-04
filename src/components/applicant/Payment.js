@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ApiService from "../../services/ApiService";
-import "./Payment.css"; // We'll create this CSS file
+import "./Payment.css";
 
 export default function Payments({ user }) {
     const [payments, setPayments] = useState([]);
@@ -16,22 +16,50 @@ export default function Payments({ user }) {
             setLoading(false);
             return;
         }
-
-        ApiService.getAllPayments()
-            .then((data) => {
-                // Filter payments for the current user
-                const userPayments = data.filter(
-                    (payment) => payment.user && payment.user.userId === user.userId
-                );
-                setPayments(userPayments);
-                setLoading(false);
-            })
-            .catch((err) => {
-                setError("Failed to fetch payment history");
-                setLoading(false);
-                console.error("Payment fetch error:", err);
-            });
+        fetchPayments();
     }, [user]);
+
+    const fetchPayments = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // API returns the array directly, not nested under 'data'
+            const paymentsData = await ApiService.getAllPayments();
+            console.log("Raw payments data:", paymentsData);
+
+            // Ensure we have an array
+            if (!Array.isArray(paymentsData)) {
+                console.warn("Payments data is not an array:", paymentsData);
+                setPayments([]);
+                return;
+            }
+
+            // Debug: Check the structure of payment objects
+            if (paymentsData.length > 0) {
+                console.log("First payment object:", paymentsData[0]);
+                console.log("User object:", user);
+            }
+
+            // Filter payments for current user - check different possible structures
+            const userPayments = paymentsData.filter(payment => {
+                // Check different possible ways the user ID might be stored
+                return payment.userId === user.userId ||
+                    (payment.user && payment.user.userId === user.userId) ||
+                    (payment.applicant && payment.applicant.userId === user.userId);
+            });
+
+            console.log("Filtered user payments:", userPayments);
+            setPayments(userPayments);
+
+        } catch (err) {
+            setError("Failed to fetch payments. Please try again later.");
+            console.error("Error fetching payments:", err);
+            setPayments([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleBackToDashboard = () => {
         navigate("/applicant");
@@ -43,6 +71,23 @@ export default function Payments({ user }) {
                 <div className="d-flex justify-content-center align-items-center" style={{ height: "50vh" }}>
                     <div className="spinner-border text-primary" role="status">
                         <span className="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="payments-container">
+                <div className="container py-5">
+                    <div className="alert alert-danger text-center fs-5">
+                        {error}
+                    </div>
+                    <div className="text-center">
+                        <button className="btn btn-outline-primary" onClick={handleBackToDashboard}>
+                            <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
+                        </button>
                     </div>
                 </div>
             </div>
@@ -69,15 +114,15 @@ export default function Payments({ user }) {
                 {payments.length === 0 ? (
                     <div className="text-center">
                         <div className="alert alert-info text-center fs-5">
-                            No payment history found
+                            No payment history found for your account
                         </div>
                         <button
-                        className="btn btn-outline-primary"
-                        onClick={handleBackToDashboard}
-                        style={{ whiteSpace: 'nowrap' }}
-                    >
-                        <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
-                    </button>
+                            className="btn btn-outline-primary"
+                            onClick={handleBackToDashboard}
+                            style={{ whiteSpace: 'nowrap' }}
+                        >
+                            <i className="bi bi-arrow-left me-2"></i>Back to Dashboard
+                        </button>
                     </div>
                 ) : (
                     <>
@@ -100,19 +145,19 @@ export default function Payments({ user }) {
                                 {payments.map((payment) => (
                                     <tr key={payment.paymentId}>
                                         <td>{payment.paymentId}</td>
-                                        <td>R {payment.paymentAmount.toFixed(2)}</td>
-                                        <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
-                                        <td>{payment.paymentType}</td>
-                                        <td>{payment.paymentMethod}</td>
-                                        <td>{payment.paymentDetails}</td>
+                                        <td>R {payment.paymentAmount?.toFixed(2) || "0.00"}</td>
+                                        <td>{payment.paymentDate ? new Date(payment.paymentDate).toLocaleDateString() : "-"}</td>
+                                        <td>{payment.paymentType || "-"}</td>
+                                        <td>{payment.paymentMethod || "-"}</td>
+                                        <td>{payment.paymentDetails || "-"}</td>
                                         <td>{payment.paymentMethod === "Card" ? payment.cardholderName : "-"}</td>
                                         <td>
-                                            {payment.paymentMethod === "Card"
+                                            {payment.paymentMethod === "Card" && payment.cardNumber
                                                 ? `**** **** **** ${payment.cardNumber.toString().slice(-4)}`
                                                 : "-"}
                                         </td>
                                         <td>
-                                            {payment.paymentMethod === "Card"
+                                            {payment.paymentMethod === "Card" && payment.expiryDate
                                                 ? new Date(payment.expiryDate).toLocaleDateString()
                                                 : "-"}
                                         </td>
