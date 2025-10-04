@@ -72,7 +72,7 @@ const Ticket = ({ user }) => {
                 paymentMethod: paymentMethod === "Card" ? "Card" : "Cash",
                 paymentAmount: selectedTicket.ticketAmount,
                 paymentDate: new Date().toISOString().split('T')[0],
-                paymentDetails: `Payment for ${selectedTicket.ticketType} - Vehicle: ${getVehicleDisplayName(selectedTicket.vehicle)}`,
+                paymentDetails: `Payment for vehicle ticket in violation of: ${selectedTicket.ticketType}`,
                 user: { userId: parseInt(userId) }
             };
 
@@ -183,7 +183,7 @@ const Ticket = ({ user }) => {
 
             {/* Back Button */}
             <div className="back-button-container">
-                <button className="back-button" onClick={() => navigate(-1)}>⬅ Back to dashboard</button>
+                <button className="back-button" onClick={() => navigate(-1)}> Back to dashboard</button>
             </div>
 
             {/* Payment Modal */}
