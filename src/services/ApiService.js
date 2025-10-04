@@ -172,22 +172,23 @@ static async deleteVehicle(vehicleID) {
 }
 
 // update vehicle
-static async updateVehicle(vehicleID, vehicleData) {
-  try {
-    // Include vehicleID in the object because backend expects full vehicle object
-    const response = await axios.put(`${API_BASE_URL}/vehicle/update`, {
-      ...vehicleData,
-      vehicleID,
-    });
-    return response.data;
-  } catch (error) {
-    console.error(
-      "Error updating vehicle:",
-      error.response?.data || error.message
-    );
-    throw error;
-  }
+// In ApiService.js
+static async updateVehicle(formData) {
+  const response = await axios.put(
+    `${API_BASE_URL}/vehicle/update`,
+    formData,
+    {
+      headers: { 
+        "Content-Type": "multipart/form-data",
+        // Add authorization header if needed
+        // "Authorization": `Bearer ${yourToken}`
+      }
+    }
+  );
+  return response.data;
 }
+
+
 
 // // Fetch all expired vehicles (not per user)
 static async getExpiredVehicles() {
