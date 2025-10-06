@@ -47,6 +47,8 @@ export default function Payments({ user }) {
         }
     };
 
+    //Error Comment
+
     const handleBackToDashboard = () => {
         navigate("/applicant");
     };
