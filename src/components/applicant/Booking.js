@@ -160,86 +160,96 @@ const Booking = () => {
     setShowPaymentForm(true);
   };
 
-  const handlePaymentSubmit = async (e) => {
+const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setErrorMessage("");
 
     try {
-      // Check that userData exists
-      if (!userData || !userData.userId) {
-        setErrorMessage("User not found. Redirecting to login...");
-        setTimeout(() => navigate("/login"), 2000);
-        setLoading(false);
-        return;
-      }
-
-      const formatExpiryDate = (expiry) => {
-        if (!expiry || !expiry.includes("/")) {
-          throw new Error("Invalid expiry date format, expected MM/YY");
+        if (!userData || !userData.userId) {
+            setErrorMessage("User not found. Redirecting to login...");
+            setTimeout(() => navigate("/login"), 2000);
+            setLoading(false);
+            return;
         }
-        const [month, year] = expiry.split("/");
-        return `20${year}-${month.padStart(2, "0")}-01`; // YYYY-MM-DD
-      };
 
-      const paymentRequestData = {
-        paymentType: "Booking",
-        paymentMethod: paymentData.paymentMethod,
-        paymentAmount: currentTest.fee,
-        paymentDate: new Date().toISOString().split("T")[0],
-        ...(paymentData.paymentMethod === "Card" && {
-          cardholderName: paymentData.cardholderName,
-          cardNumber: parseInt(paymentData.cardNumber.replace(/\s/g, ""), 10),
-          expiryDate: formatExpiryDate(paymentData.expiryDate),
-          cvv: parseInt(paymentData.cvv, 10),
-        }),
-      };
+        const formatExpiryDate = (expiry) => {
+            if (!expiry || !expiry.includes("/")) {
+                throw new Error("Invalid expiry date format, expected MM/YY");
+            }
+            const [month, year] = expiry.split("/");
+            return `20${year}-${month.padStart(2, "0")}-01`;
+        };
 
-      const appointmentData = {
-        testAddress: formData.testAddress,
-        testVenue: formData.testVenue,
-        testDate: formData.testDate,
-        testTime: formData.testTime ? formData.testTime + ":00" : null,
-        testResult: false,
-        licenseCode: formData.licenseCode,
-        testype: currentTest.testType,
-        testAmount: currentTest.fee,
-        payment: paymentRequestData,
-        applicant: {
-          userId: userData.userId,
-        },
-      };
+        // Create payment first
+        const paymentDataToSend = {
+            paymentType: "Booking",
+            paymentMethod: paymentData.paymentMethod,
+            paymentAmount: currentTest.fee,
+            paymentDate: new Date().toISOString().split("T")[0],
+            ...(paymentData.paymentMethod === "Card" && {
+                cardholderName: paymentData.cardholderName,
+                cardNumber: parseInt(paymentData.cardNumber.replace(/\s/g, ""), 10),
+                expiryDate: formatExpiryDate(paymentData.expiryDate),
+                cvv: parseInt(paymentData.cvv, 10),
+            }),
+        };
 
-      console.log("Sending appointment with payment:", appointmentData);
-      const bookingRes = await ApiService.createTestAppointment(appointmentData);
+        console.log("Creating payment:", paymentDataToSend);
+        const paymentResponse = await ApiService.createPayment(paymentDataToSend);
 
-      if (bookingRes.success) {
-        setBookingId(
-          bookingRes.data.testAppointmentId || bookingRes.data.id
-        );
-        setPaymentSuccess(true);
-        
-        // ✅ CRITICAL FIX: Navigate back to dashboard without passing stale data
-        // This forces the dashboard to fetch fresh data from the database
-        setTimeout(() => {
-          navigate("/applicant");
-        }, 2000);
-      } else {
-        const errorDetail =
-          bookingRes.error?.message ||
-          (typeof bookingRes.error === "string"
-            ? bookingRes.error
-            : JSON.stringify(bookingRes.error));
-        setErrorMessage(`Booking failed: ${errorDetail || "Unknown error"}`);
-      }
+        // Get the full payment object by ID
+        const fullPayment = await ApiService.getPaymentById(paymentResponse.paymentId);
+
+        // Create a clean payment object without circular references
+        const cleanPayment = {
+            paymentId: fullPayment.paymentId,
+            paymentType: fullPayment.paymentType,
+            paymentMethod: fullPayment.paymentMethod,
+            paymentAmount: fullPayment.paymentAmount,
+            paymentDate: fullPayment.paymentDate,
+            // Remove problematic fields that cause circular references
+            // user: fullPayment.user, // Remove this
+            // vehicleDisc: fullPayment.vehicleDisc, // Remove this
+            cardholderName: fullPayment.cardholderName,
+            cardNumber: fullPayment.cardNumber,
+            expiryDate: fullPayment.expiryDate,
+            cvv: fullPayment.cvv
+        };
+
+        // Create appointment with clean payment object
+        const appointmentData = {
+            testAddress: formData.testAddress,
+            testVenue: formData.testVenue,
+            testDate: formData.testDate,
+            testTime: formData.testTime ? formData.testTime + ":00" : "09:00:00",
+            testResult: false,
+            licenseCode: formData.licenseCode,
+            testype: currentTest.testType,
+            testAmount: currentTest.fee,
+            payment: cleanPayment, // Use clean payment without circular references
+            applicant: {
+                userId: userData.userId,
+            },
+        };
+
+        console.log("Creating appointment with clean payment:", appointmentData);
+        const bookingRes = await ApiService.createTestAppointment(appointmentData);
+
+        if (bookingRes.success) {
+            setBookingId(bookingRes.data.testAppointmentId || bookingRes.data.id);
+            setPaymentSuccess(true);
+            setTimeout(() => navigate("/applicant"), 2000);
+        } else {
+            setErrorMessage(`Booking failed: ${bookingRes.error}`);
+        }
     } catch (error) {
-      console.error("Payment/Booking error:", error);
-      setErrorMessage(error.message || "Error processing booking");
+        console.error("Payment/Booking error:", error);
+        setErrorMessage(error.message || "Error processing booking");
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
-
+};
   // Show loading while test type is being determined
   if (!currentTest) {
     return (
