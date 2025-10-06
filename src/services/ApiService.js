@@ -2,33 +2,58 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/capstone";
 
+// ✅ Move helper function outside of the ApiService object
+function extractErrorMessage(error) {
+  if (error.response) {
+    const data = error.response.data;
+    if (typeof data === "string") return data;
+    if (data.error) return data.error;
+    if (data.message) return data.message;
+    return JSON.stringify(data);
+  } else if (error.request) {
+    return "No response from server";
+  } else {
+    return error.message;
+  }
+}
 
 class ApiService {
+
+    
     // Create Test Appointment
 
     // Create a new test appointment
-    static async createTestAppointment(appointmentData) {
-        try {
-            const response = await axios.post(
-                `${API_BASE_URL}/test-appointments/create`,
-                appointmentData,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-            console.log("Appointment created successfully:", response.data);
-            return {success: true, data: response.data};
-        } catch (error) {
-            console.error(
-                "Booking creation error:",
-                error.response?.data || error.message
-            );
-            const errorMessage = this.extractErrorMessage(error);
-            return {success: false, error: errorMessage};
-        }
+ static async createTestAppointment(appointmentData) {
+  try {
+    console.log("Sending appointment data:", JSON.stringify(appointmentData, null, 2));
+    const response = await axios.post(
+      `${API_BASE_URL}/test-appointments/create`,
+      appointmentData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log("Appointment created successfully:", response.data);
+    return { success: true, data: response.data };
+  } catch (error) {
+    console.error("Full error:", error);
+    console.error("Error response:", error.response?.data);
+    console.error("Error status:", error.response?.status);
+    return { success: false, error: extractErrorMessage(error) };
+  }
+}
+static async getPaymentById(paymentId) {
+    try {
+        const response = await axios.get(`${API_BASE_URL}/payments/read/${paymentId}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error fetching payment:", error.response?.data || error.message);
+        throw error;
     }
+}
+
 
 //Profile
     static async getUserById(userId) {
@@ -158,19 +183,19 @@ class ApiService {
     }
 
 
-  // Vehicle endpoints
-static async registerVehicle(vehicleData) { //Vehicle
-  try {
-    if (!vehicleData.applicant || !vehicleData.applicant.userId) {
-      throw new Error("User not logged in");
-    }
-    const response = await axios.post(`${API_BASE_URL}/vehicle/create`, vehicleData);
-    return response.data;
-  } catch (error) {
-    console.error("Vehicle registration error:", error.response || error.message);
-    throw error;
-  }
-}
+//   // Vehicle endpoints
+// static async registerVehicle(vehicleData) { //Vehicle
+//   try {
+//     if (!vehicleData.applicant || !vehicleData.applicant.userId) {
+//       throw new Error("User not logged in");
+//     }
+//     const response = await axios.post(`${API_BASE_URL}/vehicle/create`, vehicleData);
+//     return response.data;
+//   } catch (error) {
+//     console.error("Vehicle registration error:", error.response || error.message);
+//     throw error;
+//   }
+// }
 
 // delete vehicle dashboard
 // Delete a vehicle by ID
