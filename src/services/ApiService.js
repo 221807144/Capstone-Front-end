@@ -158,17 +158,31 @@ class ApiService {
     }
 
 
-    // delete vehicle dashboard
-    // Delete a vehicle by ID
-    static async deleteVehicle(vehicleID) {
-        try {
-            const response = await axios.delete(`${API_BASE_URL}/vehicle/delete/${vehicleID}`);
-            return response.data; // "Vehicle deleted successfully"
-        } catch (error) {
-            console.error("Error deleting vehicle:", error.response?.data || error.message);
-            throw error;
-        }
+  // Vehicle endpoints
+static async registerVehicle(vehicleData) { //Vehicle
+  try {
+    if (!vehicleData.applicant || !vehicleData.applicant.userId) {
+      throw new Error("User not logged in");
     }
+    const response = await axios.post(`${API_BASE_URL}/vehicle/create`, vehicleData);
+    return response.data;
+  } catch (error) {
+    console.error("Vehicle registration error:", error.response || error.message);
+    throw error;
+  }
+}
+
+// delete vehicle dashboard
+// Delete a vehicle by ID
+static async deleteVehicle(vehicleID) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/vehicle/delete/${vehicleID}`);
+    return response.data; // "Vehicle deleted successfully"
+  } catch (error) {
+    console.error("Error deleting vehicle:", error.response?.data || error.message);
+    throw error;
+  }
+}
 // update vehicle
 static async updateVehicle(formData) {
     try {
@@ -429,7 +443,7 @@ static async updateVehicle(formData) {
     // ----------Tickets Functions--------------//
 
     // Get all tickets
-    static async getAllTickets() {
+    static async getAllTickets() { //made changes
         try {
             const response = await axios.get(`${API_BASE_URL}/tickets/getAll`);
             return response;

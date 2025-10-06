@@ -40,6 +40,7 @@ const Booking = () => {
   const [bookingId, setBookingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
+  // ✅ FIXED: Added licenseType mapping for proper dashboard integration
   const testTypes = {
     learners: {
       title: "Book Learners Test",
@@ -47,6 +48,7 @@ const Booking = () => {
       fee: 250,
       icon: "📝",
       testType: "LEARNERSLICENSETEST",
+      licenseType: "learners", // ← Critical for dashboard license checking
     },
     drivers: {
       title: "Book Drivers Test",
@@ -54,6 +56,7 @@ const Booking = () => {
       fee: 450,
       icon: "🚗",
       testType: "DRIVERSLICENSETEST",
+      licenseType: "drivers", // ← Critical for dashboard license checking
     },
   };
 
@@ -204,7 +207,7 @@ const Booking = () => {
         payment: paymentRequestData,
         applicant: {
           userId: userData.userId,
-        }, // ✅ safe applicant
+        },
       };
 
       console.log("Sending appointment with payment:", appointmentData);
@@ -215,6 +218,12 @@ const Booking = () => {
           bookingRes.data.testAppointmentId || bookingRes.data.id
         );
         setPaymentSuccess(true);
+        
+        // ✅ CRITICAL FIX: Navigate back to dashboard without passing stale data
+        // This forces the dashboard to fetch fresh data from the database
+        setTimeout(() => {
+          navigate("/applicant");
+        }, 2000);
       } else {
         const errorDetail =
           bookingRes.error?.message ||
@@ -590,7 +599,7 @@ const Booking = () => {
                   Your payment information is secure and encrypted.
                 </div>
 
-                {/* Action buttons */}
+                {/* Action buttons */} //made changes
                 <div className="d-flex justify-content-between">
                   <button
                     type="button"
