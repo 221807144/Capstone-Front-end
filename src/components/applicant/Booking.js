@@ -187,12 +187,14 @@ const Booking = () => {
         paymentMethod: paymentData.paymentMethod,
         paymentAmount: currentTest.fee,
         paymentDate: new Date().toISOString().split("T")[0],
+        paymentDetails: `Payment for ${currentTest.testType}`,
         ...(paymentData.paymentMethod === "Card" && {
           cardholderName: paymentData.cardholderName,
           cardNumber: parseInt(paymentData.cardNumber.replace(/\s/g, ""), 10),
           expiryDate: formatExpiryDate(paymentData.expiryDate),
           cvv: parseInt(paymentData.cvv, 10),
         }),
+        user: { userId: userData.userId },
       };
 
       const appointmentData = {
