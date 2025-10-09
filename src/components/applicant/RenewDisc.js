@@ -162,13 +162,14 @@ export default function RenewDisc() {
                 paymentDetails: `Vehicle disc renewal for ${vehicle.licensePlate}`,
                 paymentAmount: registrationFee,
                 paymentDate: new Date().toISOString(),
-                paymentStatus: "Completed",
                 cardNumber: paymentMethod === "Card" ? cardDetails.cardNumber : null,
-                expiryDate: paymentMethod === "Card" ? cardDetails.expiryDate : null,
+                expiryDate: paymentMethod === "Card" ? new Date(cardDetails.expiryDate).toISOString() : null,
                 cvv: paymentMethod === "Card" ? cardDetails.cvv : null,
                 cardholderName: paymentMethod === "Card" ? cardDetails.cardholderName : null,
                 user: { userId: user.userId }, // if your backend expects the user attached
             };
+
+            console.log("🧾 Sending paymentData:", paymentData);
 
             // Call your payment endpoint
             const payment = await ApiService.createPayment(paymentData);
