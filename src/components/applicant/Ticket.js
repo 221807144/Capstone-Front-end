@@ -9,8 +9,16 @@ const Ticket = ({ user }) => {
     const [error, setError] = useState("");
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [showPaymentForm, setShowPaymentForm] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState("CARD");
+    const [paymentMethod, setPaymentMethod] = useState("Card");
     const [processingPayment, setProcessingPayment] = useState(false);
+
+    // State for card payment details
+    const [cardDetails, setCardDetails] = useState({
+        cardholderName: "",
+        cardNumber: "",
+        expiryDate: "",
+        cvv: "",
+    });
 
     const navigate = useNavigate();
     const getUserId = () => user?.userId || user?.id || localStorage.getItem("userId");
@@ -42,16 +50,53 @@ const Ticket = ({ user }) => {
         const vehicle = ticket.vehicle;
         if (!vehicle) return "Unknown Vehicle";
         return `${vehicle.vehicleName || "Unknown"} ${vehicle.vehicleModel || "Vehicle"} (${vehicle.licensePlate || "No Plate"})`;
-    }
-
+    };
 
     const handlePayTicket = (ticket) => {
         setSelectedTicket(ticket);
-        setPaymentMethod("CARD");
+        setPaymentMethod("Card");
+        setCardDetails({
+            cardholderName: "",
+            cardNumber: "",
+            expiryDate: "",
+            cvv: "",
+        });
         setShowPaymentForm(true);
     };
 
-    //Hey Future me
+    // Format card number as user types
+    const handleCardNumberChange = (e) => {
+        let value = e.target.value.replace(/\D/g, "");
+        value = value.substring(0, 16);
+        const formatted = value.replace(/(.{4})/g, "$1 ").trim();
+        setCardDetails((prev) => ({ ...prev, cardNumber: formatted }));
+    };
+
+    const formatExpiryDate = (expiry) => {
+        if (!expiry || !expiry.includes("/")) return null;
+
+        const [month, year] = expiry.split("/");
+        // Assume year is two digits -> convert to 20YY
+        const fullYear = `20${year}`;
+        // Set day as "01" to make a full valid date string
+        return `${fullYear}-${month.padStart(2, "0")}-01`;
+    };
+
+
+    const handleCardDetailChange = (e) => {
+        const { name, value } = e.target;
+        setCardDetails((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleExpiryChange = (e) => {
+        let value = e.target.value.replace(/\D/g, ""); // remove non-digits
+        if (value.length >= 3) {
+            value = value.substring(0, 4);
+            value = value.replace(/^(\d{2})(\d{1,2})$/, "$1/$2"); // insert slash after 2 digits
+        }
+        setCardDetails((prev) => ({ ...prev, expiryDate: value }));
+    };
+
 
     const handlePaymentSubmit = async (e) => {
         e.preventDefault();
@@ -59,80 +104,71 @@ const Ticket = ({ user }) => {
         setProcessingPayment(true);
 
         try {
-            const formData = new FormData(e.target);
             const userId = getUserId();
-
             if (!userId) {
                 setError("User not identified. Please log in again.");
                 return;
             }
 
             const paymentData = {
-                paymentType: "Ticket", // make sure this matches your enum
-                paymentMethod: paymentMethod,
+                paymentType: "Ticket",
+                paymentMethod, // "Card" or "Cash"
                 paymentAmount: selectedTicket.ticketAmount,
                 paymentDate: new Date().toISOString().split("T")[0],
                 paymentDetails: `Payment for vehicle ticket in violation of: ${selectedTicket.ticketType}`,
-                user: { userId: parseInt(userId) }
+                user: { userId: parseInt(userId) },
             };
 
             if (paymentMethod === "Card") {
-                paymentData.cardholderName = formData.get("cardholderName");
-                paymentData.cardNumber = formData.get("cardNumber");
-                paymentData.expiryDate = formData.get("expiryDate");
-                paymentData.cvv = parseInt(formData.get("cvv"));
+                const [month, year] = cardDetails.expiryDate.split("/");
+                const formattedExpiry = `20${year}-${month.padStart(2, "0")}-01`;
+
+                paymentData.cardholderName = cardDetails.cardholderName;
+                paymentData.cardNumber = cardDetails.cardNumber.replace(/\s/g, "");
+                paymentData.expiryDate = formatExpiryDate(cardDetails.expiryDate);
+                paymentData.cvv = parseInt(cardDetails.cvv);
             }
 
-            console.log("Submitting payment for user:", userId, paymentData);
+            console.log("Submitting payment:", paymentData);
+            console.log("🪪 Card details:", cardDetails);
 
-            // 1️⃣ Create payment
             const paymentResponse = await ApiService.createPayment(paymentData);
             console.log("Payment response:", paymentResponse);
 
-            // 2️⃣ Update ticket with payment
             const updatedTicket = {
                 ...selectedTicket,
                 status: "PAID",
-                payment: { paymentId: paymentResponse.paymentId }
+                payment: { paymentId: paymentResponse.paymentId },
             };
 
             await ApiService.updateTicket(updatedTicket);
-            console.log("Ticket updated:", updatedTicket);
-
-            // 3️⃣ Show success and refresh data
             alert("Payment processed successfully!");
 
-            // Close the modal
             setShowPaymentForm(false);
             setSelectedTicket(null);
-
-            // 4️⃣ 🔁 Refresh tickets automatically
             await fetchTickets(userId);
-
         } catch (err) {
             console.error("Payment error:", err);
-            const errorMessage =
-                err.response?.data?.message || "Payment failed. Please try again.";
+            const errorMessage = err.response?.data?.message || "Payment failed. Please try again.";
             setError(errorMessage);
         } finally {
             setProcessingPayment(false);
         }
     };
 
-    //Error comment
-
-
     const totalTickets = tickets.length;
     const totalDue = tickets
         .filter(ticket => ticket.status === "UNPAID")
         .reduce((sum, ticket) => sum + (ticket.ticketAmount || 0), 0);
 
-    if (loading) return (
-        <div className="ticket-container">
-            <div className="loading-spinner"></div>
-            <p>Loading your tickets...</p>
-        </div>
-    );
+    if (loading) {
+        return (
+            <div className="ticket-container">
+                <div className="loading-spinner"></div>
+                <p>Loading your tickets...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="ticket-container">
@@ -143,9 +179,6 @@ const Ticket = ({ user }) => {
 
             {error && <div className="error-message">{error}</div>}
 
-
-
-            {/* Summary Cards */}
             <div className="summary-cards">
                 <div className="summary-card blue-card">
                     <h4>Total Tickets</h4>
@@ -157,7 +190,6 @@ const Ticket = ({ user }) => {
                 </div>
             </div>
 
-            {/* Tickets Grid */}
             {tickets.length === 0 ? (
                 <div className="no-tickets">
                     <h3>No tickets found.</h3>
@@ -166,17 +198,27 @@ const Ticket = ({ user }) => {
                 <div className="tickets-grid">
                     {tickets.map((ticket, index) => (
                         <div key={ticket.ticketId || index} className="ticket-card">
-                            <div className="ticket-type-badge">{ticket.ticketType?.replace(/_/g, " ") || "Violation"}</div>
+                            <div className="ticket-type-badge">
+                                {ticket.ticketType?.replace(/_/g, " ") || "Violation"}
+                            </div>
                             <h3>Ticket #{ticket.ticketId}</h3>
                             <p className="vehicle-info">
-                                <strong>Vehicle:</strong>{" "}
-                                {getVehicleDisplayName(ticket)}
+                                <strong>Vehicle:</strong> {getVehicleDisplayName(ticket)}
                             </p>
                             <p><strong>Amount:</strong> R{ticket.ticketAmount}</p>
                             <p><strong>Status:</strong> {ticket.status}</p>
-                            <p><strong>Issued:</strong> {ticket.issueDate ? new Date(ticket.issueDate).toLocaleDateString() : "Unknown"}</p>
+                            <p>
+                                <strong>Issued:</strong>{" "}
+                                {ticket.issueDate
+                                    ? new Date(ticket.issueDate).toLocaleDateString()
+                                    : "Unknown"}
+                            </p>
                             {ticket.status === "UNPAID" && (
-                                <button className="pay-button" onClick={() => handlePayTicket(ticket)} disabled={processingPayment}>
+                                <button
+                                    className="pay-button"
+                                    onClick={() => handlePayTicket(ticket)}
+                                    disabled={processingPayment}
+                                >
                                     {processingPayment ? "Processing..." : "Pay Now"}
                                 </button>
                             )}
@@ -185,12 +227,12 @@ const Ticket = ({ user }) => {
                 </div>
             )}
 
-            {/* Back Button */}
             <div className="back-button-container">
-                <button className="back-button" onClick={() => navigate(-1)}> Back to dashboard</button>
+                <button className="back-button" onClick={() => navigate(-1)}>
+                    Back to dashboard
+                </button>
             </div>
 
-            {/* Payment Modal */}
             {showPaymentForm && selectedTicket && (
                 <div className="payment-modal-overlay">
                     <div className="payment-modal">
@@ -198,46 +240,96 @@ const Ticket = ({ user }) => {
                         <form onSubmit={handlePaymentSubmit} className="payment-form">
                             <div className="form-group">
                                 <label>Payment Method</label>
-                                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
-                                    <option value="Card">Credit Card</option>
+                                <select
+                                    value={paymentMethod}
+                                    onChange={(e) => setPaymentMethod(e.target.value)}
+                                >
                                     <option value="Cash">Cash</option>
+                                    <option value="Card">Card</option>
                                 </select>
                             </div>
 
-                            {paymentMethod === "CARD" && (
+                            {paymentMethod === "Card" && (
                                 <>
                                     <div className="form-group">
                                         <label>Cardholder Name</label>
-                                        <input name="cardholderName" placeholder="John Doe" required />
+                                        <input
+                                            name="cardholderName"
+                                            placeholder="John Doe"
+                                            required
+                                            autoComplete="cc-name"
+                                            value={cardDetails.cardholderName}
+                                            onChange={handleCardDetailChange}
+                                        />
                                     </div>
                                     <div className="form-group">
                                         <label>Card Number</label>
-                                        <input name="cardNumber" placeholder="1234 5678 9012 3456" required />
+                                        <input
+                                            name="cardNumber"
+                                            placeholder="1234 5678 9012 3456"
+                                            required
+                                            value={cardDetails.cardNumber}
+                                            onChange={handleCardNumberChange}
+                                            inputMode="numeric"
+                                            maxLength="19"
+                                            autoComplete="cc-number"
+                                        />
                                     </div>
                                     <div className="form-row">
                                         <div className="form-group">
-                                            <label>Expiry Date</label>
-                                            <input type="month" name="expiryDate" required />
+                                            <label>Expiry Date (MM/YY)</label>
+                                            <input
+                                                type="text"
+                                                name="expiryDate"
+                                                placeholder="MM/YY"
+                                                required
+                                                maxLength="5"
+                                                autoComplete="cc-exp"
+                                                value={cardDetails.expiryDate}
+                                                onChange={handleExpiryChange}
+                                                inputMode="numeric"
+                                            />
                                         </div>
+
                                         <div className="form-group">
                                             <label>CVV</label>
-                                            <input type="number" name="cvv" placeholder="123" required min="100" max="999" />
+                                            <input
+                                                type="password"
+                                                name="cvv"
+                                                placeholder="123"
+                                                required
+                                                minLength="3"
+                                                maxLength="3"
+                                                inputMode="numeric"
+                                                autoComplete="cc-csc"
+                                                value={cardDetails.cvv}
+                                                onChange={handleCardDetailChange}
+                                            />
                                         </div>
                                     </div>
                                 </>
                             )}
 
-                            {paymentMethod === "CASH" && (
+                            {paymentMethod === "Cash" && (
                                 <div className="cash-note">
                                     💵 Please pay at your nearest traffic department office.
                                 </div>
                             )}
 
                             <div className="form-actions">
-                                <button type="submit" className="submit-btn" disabled={processingPayment}>
+                                <button
+                                    type="submit"
+                                    className="submit-btn"
+                                    disabled={processingPayment}
+                                >
                                     {processingPayment ? "Processing..." : "Confirm Payment"}
                                 </button>
-                                <button type="button" className="cancel-btn" onClick={() => setShowPaymentForm(false)} disabled={processingPayment}>
+                                <button
+                                    type="button"
+                                    className="cancel-btn"
+                                    onClick={() => setShowPaymentForm(false)}
+                                    disabled={processingPayment}
+                                >
                                     Cancel
                                 </button>
                             </div>
