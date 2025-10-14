@@ -21,7 +21,7 @@ const Booking = () => {
     testVenue: "",
     testDate: "",
     testTime: "",
-    licenseCode: "",
+    licenseCode: "", // Just for booking reference, not saved to License/Learners tables
     notes: "",
   });
 
@@ -40,7 +40,6 @@ const Booking = () => {
   const [bookingId, setBookingId] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
 
-  // ✅ FIXED: Added licenseType mapping for proper dashboard integration
   const testTypes = {
     learners: {
       title: "Book Learners Test",
@@ -48,7 +47,7 @@ const Booking = () => {
       fee: 250,
       icon: "📝",
       testType: "LEARNERSLICENSETEST",
-      licenseType: "learners", // ← Critical for dashboard license checking
+      licenseType: "learners",
     },
     drivers: {
       title: "Book Drivers Test",
@@ -56,7 +55,7 @@ const Booking = () => {
       fee: 450,
       icon: "🚗",
       testType: "DRIVERSLICENSETEST",
-      licenseType: "drivers", // ← Critical for dashboard license checking
+      licenseType: "drivers",
     },
   };
 
@@ -174,6 +173,8 @@ const Booking = () => {
         return;
       }
 
+      // ✅ NO LICENSE SAVING HERE - this is just for test booking
+
       const formatExpiryDate = (expiry) => {
         if (!expiry || !expiry.includes("/")) {
           throw new Error("Invalid expiry date format, expected MM/YY");
@@ -203,7 +204,7 @@ const Booking = () => {
         testDate: formData.testDate,
         testTime: formData.testTime ? formData.testTime + ":00" : null,
         testResult: null,
-        licenseCode: formData.licenseCode,
+        licenseCode: formData.licenseCode, // ✅ This is just stored in appointment, not saved to License table
         testype: currentTest.testType,
         testAmount: currentTest.fee,
         payment: paymentRequestData,
@@ -221,8 +222,6 @@ const Booking = () => {
         );
         setPaymentSuccess(true);
         
-        // ✅ CRITICAL FIX: Navigate back to dashboard without passing stale data
-        // This forces the dashboard to fetch fresh data from the database
         setTimeout(() => {
           navigate("/applicant");
         }, 2000);
@@ -421,12 +420,13 @@ const Booking = () => {
                     </div>
                   )}
 
-                  <div className="col-12 mb-3">
+                  {/* License Code Field - Only for booking reference */}
+                  <div className="col-12 mb-4">
                     <label
                       htmlFor="licenseCode"
                       className="form-label fw-medium"
                     >
-                      License Code *
+                      {testType === "learners" ? "Learners Permit Code *" : "License Code *"}
                     </label>
                     <input
                       type="text"
@@ -434,15 +434,19 @@ const Booking = () => {
                       name="licenseCode"
                       className="form-control"
                       required
-                      placeholder="Enter your license or learner's permit code"
+                      placeholder={
+                        testType === "learners" 
+                          ? "Enter your learners permit code" 
+                          : "Enter your license code"
+                      }
                       value={formData.licenseCode}
                       onChange={handleChange}
                       disabled={loading}
                     />
                     <div className="form-text">
                       {testType === "learners"
-                        ? "If you don't have a license code yet, enter your ID number"
-                        : "Enter your current driver's license or learner's permit code"}
+                        ? "Enter your existing learners permit code for verification"
+                        : "Enter your existing license code for verification"}
                     </div>
                   </div>
 
@@ -601,7 +605,7 @@ const Booking = () => {
                   Your payment information is secure and encrypted.
                 </div>
 
-                {/* Action buttons */} //made changes
+                {/* Action buttons */}
                 <div className="d-flex justify-content-between">
                   <button
                     type="button"
