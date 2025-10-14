@@ -705,7 +705,7 @@ export default function ApplicantDashboard({ userData }) {
           </div>
         </section>
 
-        {/* License Modal */} //made changes
+        {/* License Modal */} 
         {showLicenseModal && (
           <div className="modal show d-block" tabIndex="-1">
             <div className="modal-dialog">
