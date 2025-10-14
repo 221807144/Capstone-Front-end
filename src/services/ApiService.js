@@ -44,6 +44,24 @@ class ApiService {
     return { success: false, error: extractErrorMessage(error) };
   }
 }
+// Add this method to your ApiService class
+static async updateTestResult(testAppointmentId, testData) {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/admins/test-appointments/update-result/${testAppointmentId}`,
+      testData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating test result:", error.response?.data || error.message);
+    throw error;
+  }
+}
 static async getPaymentById(paymentId) {
     try {
         const response = await axios.get(`${API_BASE_URL}/payments/read/${paymentId}`);
@@ -327,58 +345,79 @@ static async updateVehicle(formData) {
             throw error;
         }
     }
-
-    // ------------------ DELETE METHODS ------------------
-    static async deleteBooking(id) {
-        try {
-            const response = await axios.delete(`${API_BASE_URL}/bookings/delete/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error("Error deleting booking:", error.response || error.message);
-            throw error;
-        }
+// ------------------ DELETE METHODS ------------------
+static async deleteApplicant(id) {
+    try {
+        const response = await axios.delete(`${API_BASE_URL}/admins/applicants/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting applicant:", error.response || error.message);
+        throw error;
     }
+}
 
-    static async deleteTestAppointment(id) {
-        try {
-            const response = await axios.delete(`${API_BASE_URL}/test-appointments/delete/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error("Error deleting test appointment:", error.response || error.message);
-            throw error;
-        }
+static async deleteBooking(id) {
+    try {
+        const response = await axios.delete(`${API_BASE_URL}/admins/bookings/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting booking:", error.response || error.message);
+        throw error;
     }
+}
 
-    static async deleteVehicleDisc(id) {
-        try {
-            const response = await axios.delete(`${API_BASE_URL}/vehicledisc/delete/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error("Error deleting vehicle disc:", error.response || error.message);
-            throw error;
-        }
+static async deletePayment(id) {
+    try {
+        const response = await axios.delete(`${API_BASE_URL}/admins/payments/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting payment:", error.response || error.message);
+        throw error;
     }
+}
 
-    static async deleteTicket(id) {
-        try {
-            const response = await axios.delete(`${API_BASE_URL}/tickets/delete/${id}`);
-            return response.data;
-        } catch (error) {
-            console.error("Error deleting ticket:", error.response || error.message);
-            throw error;
-        }
+static async deleteTestAppointment(id) {
+    try {
+        const response = await axios.delete(`${API_BASE_URL}/admins/test-appointments/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting test appointment:", error.response || error.message);
+        throw error;
     }
+}
 
-// Fetch vehicles for a specific user
-    static async getVehiclesByUser(userId) {
-        try {
-            const response = await axios.get(`${API_BASE_URL}/vehicle/applicant/${userId}`);
-            return response.data;
-        } catch (error) {
-            console.error("Error fetching user's vehicles:", error.response?.data || error.message);
-            throw error;
-        }
+static async deleteVehicleDisc(id) {
+    try {
+        const response = await axios.delete(`${API_BASE_URL}/admins/vehicle-discs/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting vehicle disc:", error.response || error.message);
+        throw error;
     }
+}
+
+static async deleteTicket(id) {
+    try {
+        const response = await axios.delete(`${API_BASE_URL}/admins/tickets/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting ticket:", error.response || error.message);
+        throw error;
+    }
+}
+
+// Add the missing deleteVehicle method
+static async deleteVehicle(id) {
+    try {
+        // Note: You don't have a vehicle delete endpoint in your AdminController yet
+        // You'll need to add this endpoint or use an existing one
+        const response = await axios.delete(`${API_BASE_URL}/vehicle/delete/${id}`);
+        return response.data;
+    } catch (error) {
+        console.error("Error deleting vehicle:", error.response || error.message);
+        throw error;
+    }
+}
 
     //This is probably draining you
 

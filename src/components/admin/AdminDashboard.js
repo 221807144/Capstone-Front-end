@@ -11,6 +11,9 @@ import {
   Trash2,
   LogOut,
   Search,
+  CheckCircle,
+  XCircle,
+  Edit,
 } from "lucide-react";
 import ApiService from "../../services/ApiService";
 
@@ -31,6 +34,11 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [editingTest, setEditingTest] = useState(null);
+  const [testResultForm, setTestResultForm] = useState({
+    testResult: null,
+    notes: ""
+  });
 
   const adminFullName = localStorage.getItem("adminFullName") || "Admin";
 
@@ -82,6 +90,58 @@ export default function AdminDashboard() {
         return value.toString().toLowerCase().includes(searchLower);
       });
     });
+  };
+
+  // Update applicant status and reason
+  const updateApplicantStatus = async (applicantId, status, reason = "") => {
+    try {
+      await ApiService.updateApplicantStatus(applicantId, {
+        status: status,
+        reason: reason,
+      });
+      
+      // Update local state
+      setData(prev => ({
+        ...prev,
+        applicants: (prev.applicants || []).map(applicant =>
+          applicant.userId === applicantId 
+            ? { ...applicant, status, reason }
+            : applicant
+        )
+      }));
+      
+      alert("Applicant status updated successfully!");
+    } catch (err) {
+      console.error("Error updating applicant status:", err);
+      alert("Failed to update applicant status.");
+    }
+  };
+
+  // Update test result
+  const updateTestResult = async (testAppointmentId, testResult, notes = "") => {
+    try {
+      await ApiService.updateTestResult(testAppointmentId, {
+        testResult: testResult,
+        notes: notes,
+      });
+      
+      // Update local state
+      setData(prev => ({
+        ...prev,
+        testAppointments: (prev.testAppointments || []).map(test =>
+          test.testAppointmentId === testAppointmentId 
+            ? { ...test, testResult, notes }
+            : test
+        )
+      }));
+      
+      setEditingTest(null);
+      setTestResultForm({ testResult: null, notes: "" });
+      alert("Test result updated successfully!");
+    } catch (err) {
+      console.error("Error updating test result:", err);
+      alert("Failed to update test result.");
+    }
   };
 
   const handleDelete = async (entity, id) => {
@@ -243,7 +303,11 @@ export default function AdminDashboard() {
                 <td>{"*".repeat(a.password?.length || 0)}</td>
                 <td>
                   <select
-                    className="form-select form-select-sm"
+                    className={`form-select form-select-sm ${
+                      a.status === 'ACCEPTED' ? 'bg-success text-white' :
+                      a.status === 'REJECTED' ? 'bg-danger text-white' :
+                      'bg-warning text-dark'
+                    }`}
                     value={a.status || "PENDING"}
                     onChange={async (e) => {
                       const newStatus = e.target.value;
@@ -324,6 +388,174 @@ export default function AdminDashboard() {
     </div>
   );
 
+  // --- Test Results Modal ---
+  const renderTestResultModal = () => {
+    if (!editingTest) return null;
+
+    return (
+      <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">Update Test Result</h5>
+              <button 
+                type="button" 
+                className="btn-close" 
+                onClick={() => {
+                  setEditingTest(null);
+                  setTestResultForm({ testResult: null, notes: "" });
+                }}
+              ></button>
+            </div>
+            <div className="modal-body">
+              <div className="mb-3">
+                <label className="form-label">Test Result *</label>
+                <div>
+                  <button
+                    type="button"
+                    className={`btn me-2 ${
+                      testResultForm.testResult === true 
+                        ? 'btn-success' 
+                        : 'btn-outline-success'
+                    }`}
+                    onClick={() => setTestResultForm(prev => ({ ...prev, testResult: true }))}
+                  >
+                    <CheckCircle size={16} className="me-1" />
+                    Pass
+                  </button>
+                  <button
+                    type="button"
+                    className={`btn ${
+                      testResultForm.testResult === false 
+                        ? 'btn-danger' 
+                        : 'btn-outline-danger'
+                    }`}
+                    onClick={() => setTestResultForm(prev => ({ ...prev, testResult: false }))}
+                  >
+                    <XCircle size={16} className="me-1" />
+                    Fail
+                  </button>
+                </div>
+              </div>
+              <div className="mb-3">
+                <label className="form-label">Notes (Optional)</label>
+                <textarea
+                  className="form-control"
+                  rows="3"
+                  placeholder="Add any notes about the test result..."
+                  value={testResultForm.notes}
+                  onChange={(e) => setTestResultForm(prev => ({ ...prev, notes: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => {
+                  setEditingTest(null);
+                  setTestResultForm({ testResult: null, notes: "" });
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                disabled={testResultForm.testResult === null}
+                onClick={() => updateTestResult(editingTest.testAppointmentId, testResultForm.testResult, testResultForm.notes)}
+              >
+                Update Result
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // --- Test Appointments Table ---
+  const renderTestAppointmentsTable = () => (
+    <>
+      {renderTestResultModal()}
+      <div className="table-responsive" style={{ overflowX: "auto" }}>
+        <table className="table table-striped table-bordered text-sm">
+          <thead className="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Address</th>
+              <th>Venue</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Result</th>
+              <th>License Code</th>
+              <th>Test Type</th>
+              <th>Amount</th>
+              <th>Payment ID</th>
+              <th>Applicant ID</th>
+              <th>Applicant Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredTestAppointments.length > 0 ? (
+              filteredTestAppointments.map((t) => (
+                <tr key={t.testAppointmentId}>
+                  <td>{t.testAppointmentId}</td>
+                  <td>{t.testAddress || "-"}</td>
+                  <td>{t.testVenue || "-"}</td>
+                  <td>{t.testDate ? new Date(t.testDate).toLocaleDateString() : "-"}</td>
+                  <td>{t.testTime || "-"}</td>
+                  <td>
+                    <span className={`badge ${
+                      t.testResult === null 
+                        ? 'bg-warning' 
+                        : t.testResult 
+                          ? 'bg-success' 
+                          : 'bg-danger'
+                    }`}>
+                      {t.testResult === null ? "Pending" : t.testResult ? "Pass" : "Fail"}
+                    </span>
+                  </td>
+                  <td>{t.licenseCode || "-"}</td>
+                  <td>{t.testype || "-"}</td>
+                  <td>R {t.testAmount?.toFixed(2) || "0.00"}</td>
+                  <td>{t.payment ? t.payment.paymentId : "N/A"}</td>
+                  <td>{t.applicant ? t.applicant.userId : "N/A"}</td>
+                  <td>{t.applicant ? `${t.applicant.firstName || ""} ${t.applicant.lastName || ""}`.trim() : "N/A"}</td>
+                  <td>
+                    <div className="btn-group">
+                      <button
+                        className="btn btn-sm btn-outline-primary"
+                        onClick={() => {
+                          setEditingTest(t);
+                          setTestResultForm({
+                            testResult: t.testResult,
+                            notes: t.notes || ""
+                          });
+                        }}
+                        title="Update Test Result"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      {renderDeleteButton("testAppointment", t.testAppointmentId)}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="13" className="text-center">
+                  {searchTerm ? "No test appointments found matching your search" : "No test appointments found."}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
+
   // --- Vehicles Table ---
   const renderVehiclesTable = () => (
     <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -367,58 +599,6 @@ export default function AdminDashboard() {
             <tr>
               <td colSpan="9" className="text-center">
                 {searchTerm ? "No vehicles found matching your search" : "No vehicles found"}
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  // --- Test Appointments Table ---
-  const renderTestAppointmentsTable = () => (
-    <div className="table-responsive" style={{ overflowX: "auto" }}>
-      <table className="table table-striped table-bordered text-sm">
-        <thead className="table-dark">
-          <tr>
-            <th>ID</th>
-            <th>Address</th>
-            <th>Venue</th>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Result</th>
-            <th>License Code</th>
-            <th>Test Type</th>
-            <th>Amount</th>
-            <th>Payment ID</th>
-            <th>Applicant ID</th>
-            <th>Applicant Name</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredTestAppointments.length > 0 ? (
-            filteredTestAppointments.map((t) => (
-              <tr key={t.testAppointmentId}>
-                <td>{t.testAppointmentId}</td>
-                <td>{t.testAddress || "-"}</td>
-                <td>{t.testVenue || "-"}</td>
-                <td>{t.testDate ? new Date(t.testDate).toLocaleDateString() : "-"}</td>
-                <td>{t.testTime || "-"}</td>
-                <td>{t.testResult === null ? "Pending" : t.testResult ? "Pass" : "Fail"}</td>
-                <td>{t.licenseCode || "-"}</td>
-                <td>{t.testype || "-"}</td>
-                <td>R {t.testAmount?.toFixed(2) || "0.00"}</td>
-                <td>{t.payment ? t.payment.paymentId : "N/A"}</td>
-                <td>{t.applicant ? t.applicant.userId : "N/A"}</td>
-                <td>{t.applicant ? `${t.applicant.firstName || ""} ${t.applicant.lastName || ""}`.trim() : "N/A"}</td>
-                <td>{renderDeleteButton("testAppointment", t.testAppointmentId)}</td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="13" className="text-center">
-                {searchTerm ? "No test appointments found matching your search" : "No test appointments found."}
               </td>
             </tr>
           )}
