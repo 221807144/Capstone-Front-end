@@ -239,7 +239,6 @@ static async updateVehicle(formData) {
         }
     }
 
-// made chnages
 // ✅ Correct
     static async getExpiredVehiclesByUser(userId) {
         try {
