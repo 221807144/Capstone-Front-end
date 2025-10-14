@@ -244,7 +244,15 @@ static async updateVehicle(formData) {
     }
 }
 
-
+static async getVehiclesByUser(userId) {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/vehicle/applicant/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching user's vehicles:", error.response?.data || error.message);
+    throw error;
+  }
+}
 
 // // Fetch all expired vehicles (not per user)
     static async getExpiredVehicles() {
