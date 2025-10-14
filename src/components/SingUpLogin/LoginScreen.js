@@ -15,54 +15,48 @@ export default function LoginScreen({ onLogin }) {
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
-const handleLogin = async () => {
-  if (!email || !password) {
-    setError("Please enter email and password.");
-    return;
-  }
 
-  try {
-    let response;
-
-    // Call the appropriate API based on user type
-    if (isApplicant) {
-      response = await ApiService.loginUser(email, password);
-    } else {
-      response = await ApiService.loginAdmin(email, password);
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError("Please enter email and password.");
+      return;
     }
 
-    // Extract user data from response
-    // Backend returns object with firstName, lastName, userId, etc.
-    const user = response || {};
+    try {
+      // Use unified login - automatically detects user type based on email domain
+      const user = await ApiService.loginUser(email, password);
 
-    if (user.firstName) {
-      // Show welcome alert
-      alert(`Welcome ${user.firstName}!`);
+      if (user) {
+        // Show welcome alert
+        alert(`Welcome ${user.firstName || 'User'}!`);
 
-      // Save user data in state
-      setUserData(user);
+        // Determine role based on email domain or response
+        const isApplicant = !email.endsWith('@admin.co.za');
+        
+        // Pass user data and role to parent App.js
+        onLogin({ 
+          ...user, 
+          isApplicant,
+          role: isApplicant ? "APPLICANT" : "ADMIN"
+        });
 
-      // Pass user data and role to parent App.js
-      onLogin({ ...user, isApplicant });
-
-      // Navigate based on role
-      if (isApplicant) {
-        navigate("/applicant");
+        // Navigate based on role
+        if (isApplicant) {
+          navigate("/applicant");
+        } else {
+          navigate("/admin");
+        }
       } else {
-        navigate("/admin");
+        setError("Login failed: No user data returned.");
       }
-    } else {
-      setError("Login failed: No user data returned.");
+    } catch (err) {
+      const message =
+        err.response?.data ||
+        err.message ||
+        "Login failed. Please try again.";
+      setError(message);
     }
-  } catch (err) {
-    // Better error handling
-    const message =
-      err.response?.data ||
-      err.message ||
-      "Login failed. Please try again.";
-    setError(message);
-  }
-};
+  };
 
 
 
@@ -77,7 +71,7 @@ const handleLogin = async () => {
             <div style={{ color: "red", marginBottom: "16px" }}>{error}</div>
           )}
 
-          {/* User Type Dropdown */}
+          {/* User Type Dropdown
           <div style={styles.dropdownContainer}>
             <button
               style={styles.dropdownButton}
@@ -114,7 +108,7 @@ const handleLogin = async () => {
                 </button>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Email */}
           <div style={styles.inputGroup}>

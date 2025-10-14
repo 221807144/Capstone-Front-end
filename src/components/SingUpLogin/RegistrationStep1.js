@@ -1,14 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import ApiService from "../../services/ApiService";
 
 export default function RegistrationStep1({ onNext }) {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Get role from login page state or default to APPLICANT
-  const initialRole = location.state?.role || "APPLICANT";
 
   const [formData, setFormData] = useState({
     firstName: "",
@@ -25,13 +21,14 @@ export default function RegistrationStep1({ onNext }) {
     dobDay: "",
     password: "",
     confirmPassword: "",
-    role: initialRole,
+    role: "APPLICANT", // Added role field with default value
   });
 
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const calculateAge = (year, month, day) => {
@@ -44,6 +41,29 @@ export default function RegistrationStep1({ onNext }) {
   };
 
   const validateForm = () => {
+    // Email validation based on selected role
+    if (formData.role === "ADMIN" && !formData.email.endsWith("@admin.co.za")) {
+      setError("Admin registration requires  valid email");
+      return false;
+    }
+    
+    if (formData.role === "APPLICANT" && !formData.email.includes("@")) {
+      setError("Please enter a valid email address for applicant");
+      return false;
+    }
+
+    // If user selected ADMIN but email doesn't match, show error
+    if (formData.role === "ADMIN" && !formData.email.endsWith("@admin.co.za")) {
+      setError("Failed to register enter a valid email for admin");
+      return false;
+    }
+
+    // If user entered @admin.co.za email but selected APPLICANT, show error
+    if (formData.role === "APPLICANT" && formData.email.endsWith("@admin.co.za")) {
+      setError("Applicants cannot use admin email domain . Please use a different email or select Admin role.");
+      return false;
+    }
+
     const idRegex = /^[0-9]{13}$/;
     if (!idRegex.test(formData.idNumber)) {
       setError("ID Number must be exactly 13 digits.");
@@ -51,7 +71,7 @@ export default function RegistrationStep1({ onNext }) {
     }
 
     // Extract birthdate from ID number
-    const idDobPart = formData.idNumber.substring(0, 6); // YYMMDD
+    const idDobPart = formData.idNumber.substring(0, 6);
     const idYear = parseInt(idDobPart.substring(0, 2), 10);
     const idMonth = parseInt(idDobPart.substring(2, 4), 10);
     const idDay = parseInt(idDobPart.substring(4, 6), 10);
@@ -129,7 +149,7 @@ export default function RegistrationStep1({ onNext }) {
       idNumber: formData.idNumber,
       birthDate: birthDate,
       password: formData.password.trim(),
-      role: formData.role,
+      role: formData.role, // Include role in payload
       contact: {
         email: formData.email,
         cellphone: formData.contactNumber,
@@ -145,12 +165,19 @@ export default function RegistrationStep1({ onNext }) {
     try {
       const result = await ApiService.registerUser(payload);
       console.log("Registered successfully:", result);
-      alert("Registration successful!");
+      
+      // Show appropriate success message based on role
+      if (formData.role === "ADMIN") {
+        alert("Admin registration successful!");
+      } else {
+        alert("Applicant registration successful!");
+      }
+      
       onNext(payload);
       navigate("/");
     } catch (err) {
       console.error("Registration failed:", err);
-      setError("Registration failed. Please try again.");
+      setError("Registration failed: " + (err.message || err));
     }
   };
 
@@ -163,6 +190,14 @@ export default function RegistrationStep1({ onNext }) {
 
         {error && <div className="alert alert-danger">{error}</div>}
 
+        {/* Show info if admin role is selected */}
+        {formData.role === "ADMIN" && (
+          <div className="alert alert-info">
+            <strong>Admin Registration</strong><br />
+            You are registering as an administrator.
+          </div>
+        )}
+
         {/* Name */}
         <div className="row mb-3">
           <div className="col">
@@ -173,6 +208,7 @@ export default function RegistrationStep1({ onNext }) {
               className="form-control"
               value={formData.firstName}
               onChange={handleChange}
+              required
             />
           </div>
           <div className="col">
@@ -183,6 +219,7 @@ export default function RegistrationStep1({ onNext }) {
               className="form-control"
               value={formData.lastName}
               onChange={handleChange}
+              required
             />
           </div>
         </div>
@@ -196,7 +233,29 @@ export default function RegistrationStep1({ onNext }) {
             className="form-control"
             value={formData.idNumber}
             onChange={handleChange}
+            maxLength="13"
+            required
           />
+        </div>
+
+        {/* Role Selection Dropdown - ADDED THIS */}
+        <div className="mb-3">
+          <label className="form-label">Register As</label>
+          <select
+            name="role"
+            className="form-select"
+            value={formData.role}
+            onChange={handleChange}
+            required
+          >
+            <option value="APPLICANT">Applicant</option>
+            <option value="ADMIN">Administrator</option>
+          </select>
+          <small className="text-muted">
+            {formData.role === "ADMIN" 
+              ? "Admin accounts require email admin email"
+              : "Applicant accounts can use any valid email"}
+          </small>
         </div>
 
         {/* Contact */}
@@ -208,8 +267,16 @@ export default function RegistrationStep1({ onNext }) {
             className="form-control"
             value={formData.email}
             onChange={handleChange}
+            placeholder={formData.role === "ADMIN" ? "your@email" : "your@email.com"}
+            required
           />
+          <small className="text-muted">
+            {formData.role === "ADMIN" 
+              ? "Admin email must be valid "
+              : "Enter your email address"}
+          </small>
         </div>
+
         <div className="mb-3">
           <label className="form-label">Contact Number</label>
           <input
@@ -218,6 +285,7 @@ export default function RegistrationStep1({ onNext }) {
             className="form-control"
             value={formData.contactNumber}
             onChange={handleChange}
+            required
           />
         </div>
 
@@ -230,6 +298,7 @@ export default function RegistrationStep1({ onNext }) {
             className="form-control"
             value={formData.street}
             onChange={handleChange}
+            required
           />
         </div>
         <div className="row mb-3">
@@ -241,6 +310,7 @@ export default function RegistrationStep1({ onNext }) {
               className="form-control"
               value={formData.city}
               onChange={handleChange}
+              required
             />
           </div>
           <div className="col">
@@ -251,6 +321,7 @@ export default function RegistrationStep1({ onNext }) {
               className="form-control"
               value={formData.province}
               onChange={handleChange}
+              required
             />
           </div>
         </div>
@@ -262,6 +333,7 @@ export default function RegistrationStep1({ onNext }) {
             className="form-control"
             value={formData.country}
             onChange={handleChange}
+            required
           />
         </div>
 
@@ -274,6 +346,7 @@ export default function RegistrationStep1({ onNext }) {
               className="form-select"
               value={formData.dobMonth}
               onChange={handleChange}
+              required
             >
               <option value="">Month</option>
               {[
@@ -288,6 +361,7 @@ export default function RegistrationStep1({ onNext }) {
               className="form-select"
               value={formData.dobDay}
               onChange={handleChange}
+              required
             >
               <option value="">Day</option>
               {[...Array(31)].map((_, i) => (
@@ -299,6 +373,7 @@ export default function RegistrationStep1({ onNext }) {
               className="form-select"
               value={formData.dobYear}
               onChange={handleChange}
+              required
             >
               <option value="">Year</option>
               {[...Array(100)].map((_, i) => (
@@ -306,17 +381,6 @@ export default function RegistrationStep1({ onNext }) {
               ))}
             </select>
           </div>
-        </div>
-
-        {/* Role (Read-only) */}
-        <div className="mb-3">
-          <label className="form-label">Role</label>
-          <input
-            type="text"
-            className="form-control"
-            value={formData.role}
-            readOnly
-          />
         </div>
 
         {/* Password */}
@@ -328,7 +392,11 @@ export default function RegistrationStep1({ onNext }) {
             className="form-control"
             value={formData.password}
             onChange={handleChange}
+            required
           />
+          <small className="text-muted">
+            Password must be at least 8 characters with uppercase, lowercase, number, and special character
+          </small>
         </div>
         <div className="mb-3">
           <label className="form-label">Confirm Password</label>
@@ -338,12 +406,13 @@ export default function RegistrationStep1({ onNext }) {
             className="form-control"
             value={formData.confirmPassword}
             onChange={handleChange}
+            required
           />
         </div>
 
         {/* Submit Button */}
         <button className="btn btn-primary w-100" onClick={handleSubmit}>
-          Register
+          Register as {formData.role === "ADMIN" ? "Administrator" : "Applicant"}
         </button>
 
         <div className="text-center mt-3 text-muted">
