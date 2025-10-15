@@ -44,6 +44,23 @@ class ApiService {
     return { success: false, error: extractErrorMessage(error) };
   }
 }
+static async updateTestResult(testAppointmentId, testData) {
+  try {
+    const response = await axios.put(
+      `${API_BASE_URL}/admins/test-appointments/update-result/${testAppointmentId}`,
+      testData,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating test result:", error.response?.data || error.message);
+    throw error;
+  }
+}
 static async getPaymentById(paymentId) {
     try {
         const response = await axios.get(`${API_BASE_URL}/payments/read/${paymentId}`);
