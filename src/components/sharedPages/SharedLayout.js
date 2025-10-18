@@ -1,10 +1,28 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../images/image.png";
 
 const SharedLayout = ({ children, user }) => {
   const [showBookingDropdown, setShowBookingDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const navigate = useNavigate();
+
+  // 🛠️ WORKING LOGOUT FUNCTION
+  const handleLogout = () => {
+    console.log('🔄 Logging out...');
+    
+    // Clear ALL authentication data
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('userData');
+    
+    console.log('✅ After logout - Token:', localStorage.getItem('token'));
+    console.log('✅ After logout - User:', localStorage.getItem('user'));
+    
+    // Redirect to login page with page reload to clear React state
+    window.location.href = '/login';
+  };
 
   return (
     <div style={styles.layout}>
@@ -83,9 +101,13 @@ const SharedLayout = ({ children, user }) => {
                   <Link to="/profile/payments" style={styles.dropdownItem}>
                     Payments
                   </Link>
-                  <Link to="/" style={styles.dropdownItem}>
+                  {/* 🛠️ FIXED: Logout button with actual logout function */}
+                  <button 
+                    onClick={handleLogout}
+                    style={styles.logoutButton}
+                  >
                     Log out
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>
@@ -95,9 +117,13 @@ const SharedLayout = ({ children, user }) => {
           </nav>
 
           <div style={styles.headerActions}>
-            <Link to="/" style={styles.primaryButton}>
+            {/* 🛠️ FIXED: Logout button with actual logout function */}
+            <button 
+              onClick={handleLogout}
+              style={styles.primaryButton}
+            >
               Log out
-            </Link>
+            </button>
           </div>
         </div>
       </header>
@@ -270,6 +296,32 @@ const styles = {
     color: "#333",
     textDecoration: "none",
     transition: "background-color 0.2s",
+    border: "none",
+    background: "none",
+    width: "100%",
+    textAlign: "left",
+    font: "inherit",
+    cursor: "pointer",
+    "&:hover": {
+      backgroundColor: "#f5f5f5",
+    }
+  },
+  // 🛠️ NEW: Logout button style for dropdown
+  logoutButton: {
+    display: "block",
+    padding: "10px 20px",
+    color: "#333",
+    textDecoration: "none",
+    transition: "background-color 0.2s",
+    border: "none",
+    background: "none",
+    width: "100%",
+    textAlign: "left",
+    font: "inherit",
+    cursor: "pointer",
+    "&:hover": {
+      backgroundColor: "#f5f5f5",
+    }
   },
   headerActions: {
     display: "flex",
@@ -285,6 +337,12 @@ const styles = {
     textDecoration: "none",
     fontWeight: "bold",
     transition: "background-color 0.3s",
+    border: "none",
+    cursor: "pointer",
+    font: "inherit",
+    "&:hover": {
+      backgroundColor: "#e0a800",
+    }
   },
   main: {
     flex: "1",

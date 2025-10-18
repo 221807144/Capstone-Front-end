@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation, Navigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import SharedLayout from "../sharedPages/SharedLayout";
 import ApiService from "../../services/ApiService";
@@ -9,8 +9,8 @@ const Booking = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
 
-  // Try to get userData from location.state or localStorage
-  const storedUser = JSON.parse(localStorage.getItem("userData"));
+  // Check authentication
+  const storedUser = JSON.parse(localStorage.getItem("user"));
   const userData = location.state?.userData || storedUser;
 
   // Get the test type from URL parameters
@@ -21,7 +21,7 @@ const Booking = () => {
     testVenue: "",
     testDate: "",
     testTime: "",
-    licenseCode: "", // Just for booking reference, not saved to License/Learners tables
+    licenseCode: "",
     notes: "",
   });
 
@@ -67,12 +67,10 @@ const Booking = () => {
     }
   }, [testType]);
 
-  // Add redirect effect if no user data
-  useEffect(() => {
-    if (!userData || !userData.userId) {
-      navigate("/login");
-    }
-  }, [userData, navigate]);
+  // 🚨 SECURITY FIX: Redirect immediately if not authenticated - AFTER all hooks
+  if (!userData || !userData.userId) {
+    return <Navigate to="/login" replace />;
+  }
 
   const testVenues = [
     {
@@ -165,7 +163,7 @@ const Booking = () => {
     setErrorMessage("");
 
     try {
-      // Check that userData exists
+      // Double-check authentication before payment
       if (!userData || !userData.userId) {
         setErrorMessage("User not found. Redirecting to login...");
         setTimeout(() => navigate("/login"), 2000);
@@ -173,14 +171,12 @@ const Booking = () => {
         return;
       }
 
-      // ✅ NO LICENSE SAVING HERE - this is just for test booking
-
       const formatExpiryDate = (expiry) => {
         if (!expiry || !expiry.includes("/")) {
           throw new Error("Invalid expiry date format, expected MM/YY");
         }
         const [month, year] = expiry.split("/");
-        return `20${year}-${month.padStart(2, "0")}-01`; // YYYY-MM-DD
+        return `20${year}-${month.padStart(2, "0")}-01`;
       };
 
       const paymentRequestData = {
@@ -204,7 +200,7 @@ const Booking = () => {
         testDate: formData.testDate,
         testTime: formData.testTime ? formData.testTime + ":00" : null,
         testResult: null,
-        licenseCode: formData.licenseCode, // ✅ This is just stored in appointment, not saved to License table
+        licenseCode: formData.licenseCode,
         testype: currentTest.testType,
         testAmount: currentTest.fee,
         payment: paymentRequestData,
