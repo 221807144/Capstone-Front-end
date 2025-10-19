@@ -15,71 +15,74 @@ export default function LoginScreen({ onLogin }) {
   const [userData, setUserData] = useState(null);
   const navigate = useNavigate();
 
-const handleLogin = async () => {
-  if (!email || !password) {
-    setError("Please enter email and password.");
-    return;
-  }
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError("Please enter email and password.");
+      return;
+    }
 
-  try {
-    setError(""); // Clear previous errors
-    console.log("🔄 STEP 1: Starting login process...", { email, password });
+    try {
+      setError(""); // Clear previous errors
+      console.log("🔄 STEP 1: Starting login process...", { email, password });
 
-    // Use unified login
-    const response = await ApiService.loginUser(email, password);
-    console.log("🔄 STEP 2: Login response received:", response);
+      // Use unified login
+      const response = await ApiService.loginUser(email, password);
+      console.log("🔄 STEP 2: Login response received:", response);
 
-    // Check what was stored in localStorage
-    console.log("🔑 Stored token:", localStorage.getItem('token'));
-    console.log("👤 Stored user:", localStorage.getItem('user'));
-    console.log("🎯 Stored role:", localStorage.getItem('role'));
+      // Check what was stored in localStorage
+      console.log("🔑 Stored token:", localStorage.getItem("token"));
+      console.log("👤 Stored user:", localStorage.getItem("user"));
+      console.log("🎯 Stored role:", localStorage.getItem("role"));
 
-    if (response && response.success) {
-      console.log("🔄 STEP 3: Login successful, processing user data...");
-      
-      // Get user data from response
-      const userFromResponse = response.user;
-      console.log("📋 User data from response:", userFromResponse);
-      
-      // Show welcome alert
-      const userName = userFromResponse.firstName || 'User';
-      alert(`Welcome ${userName}!`);
-      console.log("🔄 STEP 4: Welcome alert shown");
+      if (response && response.success) {
+        console.log("🔄 STEP 3: Login successful, processing user data...");
 
-      // Pass the complete response to parent App.js
-      console.log("🔄 STEP 5: Calling onLogin callback");
-      onLogin(response);
+        // Get user data from response
+        const userFromResponse = response.user;
+        console.log("📋 User data from response:", userFromResponse);
 
-      // ✅ ADD THIS: Navigate to the correct dashboard
-      const targetRoute = response.role === 'ROLE_ADMIN' ? "/admin" : "/applicant";
-      console.log("🔄 STEP 6: Navigating to:", targetRoute);
-      navigate(targetRoute);
+        // Show welcome alert
+        const userName = userFromResponse.firstName || "User";
+        alert(`Welcome ${userName}!`);
+        console.log("🔄 STEP 4: Welcome alert shown");
 
-      console.log("🔄 STEP 7: Login process completed");
-    } else {
-      const errorMessage = response?.message || "Login failed: No success response";
+        // Pass the complete response to parent App.js
+        console.log("🔄 STEP 5: Calling onLogin callback");
+        onLogin(response);
+
+        // ✅ ADD THIS: Navigate to the correct dashboard
+        const targetRoute =
+          response.role === "ROLE_ADMIN" ? "/admin" : "/applicant";
+        console.log("🔄 STEP 6: Navigating to:", targetRoute);
+        navigate(targetRoute);
+
+        console.log("🔄 STEP 7: Login process completed");
+      } else {
+        const errorMessage =
+          response?.message || "Login failed: No success response";
+        setError(errorMessage);
+        console.error("❌ STEP FAILED: Login failed:", errorMessage);
+      }
+    } catch (err) {
+      console.error("💥 STEP FAILED: Login error:", err);
+
+      // Handle different error formats
+      let errorMessage = "Login failed. Please try again.";
+
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data) {
+        errorMessage =
+          typeof err.response.data === "string"
+            ? err.response.data
+            : JSON.stringify(err.response.data);
+      }
+
       setError(errorMessage);
-      console.error("❌ STEP FAILED: Login failed:", errorMessage);
     }
-  } catch (err) {
-    console.error("💥 STEP FAILED: Login error:", err);
-    
-    // Handle different error formats
-    let errorMessage = "Login failed. Please try again.";
-    
-    if (err.message) {
-      errorMessage = err.message;
-    } else if (err.response?.data?.message) {
-      errorMessage = err.response.data.message;
-    } else if (err.response?.data) {
-      errorMessage = typeof err.response.data === 'string' 
-        ? err.response.data 
-        : JSON.stringify(err.response.data);
-    }
-    
-    setError(errorMessage);
-  }
-};
+  };
 
   return (
     <div style={styles.background}>
@@ -92,7 +95,7 @@ const handleLogin = async () => {
             <div style={{ color: "red", marginBottom: "16px" }}>{error}</div>
           )}
 
-          {/* User Type Dropdown */}
+          {/* User Type Dropdown
           <div style={styles.dropdownContainer}>
             <button
               style={styles.dropdownButton}
@@ -129,7 +132,7 @@ const handleLogin = async () => {
                 </button>
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Email */}
           <div style={styles.inputGroup}>
@@ -147,7 +150,7 @@ const handleLogin = async () => {
           <div style={styles.inputGroup}>
             <div style={styles.passwordHeader}>
               <label style={styles.label}>Password</label>
-              <Link to="/forgot-password" style={styles.forgotPassword}>
+              <Link to="/change-password" style={styles.forgotPassword}>
                 Forgot your password?
               </Link>
             </div>
@@ -183,7 +186,12 @@ const handleLogin = async () => {
           </div>
 
           {/* Sign In Button */}
-          <button style={styles.signInButton} onClick={handleLogin}>
+          {/* Sign In Button */}
+          <button
+            type="button" // ✅ ADD THIS LINE
+            style={styles.signInButton}
+            onClick={handleLogin}
+          >
             Sign in
           </button>
 

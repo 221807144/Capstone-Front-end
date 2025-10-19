@@ -11,6 +11,20 @@ export default function VehicleProfile() {
   const [vehicle, setVehicle] = useState(initialVehicle || null);
   const [editMode, setEditMode] = useState(false);
 
+   // ✅ ADD DEBUGGING
+  useEffect(() => {
+    console.log("🔍 VehicleProfile - Full location.state:", location.state);
+    console.log("🔍 VehicleProfile - User object:", user);
+    console.log("🔍 VehicleProfile - User properties:", {
+      firstName: user?.firstName,
+      lastName: user?.lastName,
+      idNumber: user?.idNumber,
+      userId: user?.userId,
+      email: user?.email
+    });
+    console.log("🔍 VehicleProfile - All user keys:", user ? Object.keys(user) : "No user");
+  }, [location.state, user]);
+
   // Vehicle fields
   const [vehicleName, setVehicleName] = useState("");
   const [vehicleType, setVehicleType] = useState("");

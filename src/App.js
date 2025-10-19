@@ -16,6 +16,7 @@ import Payments from "./components/applicant/Payment"
 import SharedLayout from "./components/sharedPages/SharedLayout";
 import VehicleProfile from "./components/applicant/VehicleProfile";
 import Profile from "./components/applicant/Profile";
+import ChangePassword from "./components/SingUpLogin/ChangePassword";
 
 export default function App() {
     const [user, setUser] = useState(null);
@@ -234,6 +235,8 @@ export default function App() {
 
                 {/* Catch all route */}
                 <Route path="*" element={<Navigate to="/" replace />} />
+
+                <Route path="/change-password" element={<ChangePassword />} />
 
             </Routes>
         </Router>

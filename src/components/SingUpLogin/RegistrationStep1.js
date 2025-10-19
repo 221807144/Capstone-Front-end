@@ -135,36 +135,40 @@ export default function RegistrationStep1({ onNext }) {
     return true;
   };
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return;
+const handleSubmit = async () => {
+  if (!validateForm()) return;
 
-    const birthDate = `${formData.dobYear}-${String(formData.dobMonth).padStart(
-      2,
-      "0"
-    )}-${String(formData.dobDay).padStart(2, "0")}`;
+  const birthDate = `${formData.dobYear}-${String(formData.dobMonth).padStart(
+    2,
+    "0"
+  )}-${String(formData.dobDay).padStart(2, "0")}`;
 
-    const payload = {
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      idNumber: formData.idNumber,
-      birthDate: birthDate,
-      password: formData.password.trim(),
-      role: formData.role, // Include role in payload
-      contact: {
-        email: formData.email,
-        cellphone: formData.contactNumber,
-      },
-      address: {
-        street: formData.street,
-        city: formData.city,
-        province: formData.province,
-        country: formData.country,
-      },
-    };
+  const payload = {
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    idNumber: formData.idNumber,
+    birthDate: birthDate,
+    password: formData.password.trim(),
+    role: formData.role,
+    contact: {
+      email: formData.email,
+      cellphone: formData.contactNumber,
+    },
+    address: {
+      street: formData.street,
+      city: formData.city,
+      province: formData.province,
+      country: formData.country,
+    },
+  };
 
-    try {
-      const result = await ApiService.registerUser(payload);
-      console.log("Registered successfully:", result);
+  try {
+    const result = await ApiService.registerUser(payload);
+    console.log("Registration response:", result);
+    
+    // ✅ CHECK IF REGISTRATION WAS SUCCESSFUL BEFORE NAVIGATING
+    if (result && !result.error) {
+      console.log("✅ Registration successful!");
       
       // Show appropriate success message based on role
       if (formData.role === "ADMIN") {
@@ -174,13 +178,20 @@ export default function RegistrationStep1({ onNext }) {
       }
       
       onNext(payload);
-      navigate("/");
-    } catch (err) {
-      console.error("Registration failed:", err);
-      setError("Registration failed: " + (err.message || err));
+      navigate("/"); // ✅ ONLY navigate on success
+    } else {
+      // ✅ Registration failed but didn't throw error - show message and stay on page
+      console.log("❌ Registration failed with error:", result.error);
+      setError(result.error || "Registration failed. Please try again.");
+      // User stays on registration page to fix the issue
     }
-  };
-
+    
+  } catch (err) {
+    console.error("Registration failed with exception:", err);
+    setError("Registration failed: " + (err.message || err));
+    // ✅ User stays on registration page to fix the issue
+  }
+};
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="card shadow p-4 w-100" style={{ maxWidth: 600 }}>

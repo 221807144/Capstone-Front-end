@@ -302,15 +302,41 @@ export default function ApplicantDashboard({ userData }) {
   };
 
   // view vehicle
-  const handleViewVehicle = (vehicle) => {
-    navigate("/vehicle-profile", {
-      state: {
-        vehicle,
-        user: userData,
-      },
-    });
+// view vehicle - ENHANCED VERSION
+const handleViewVehicle = (vehicle) => {
+  // Get user data from multiple sources
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+  const currentUser = userData || storedUser;
+  
+  console.log("🔍 handleViewVehicle - currentUser:", currentUser);
+  console.log("🔍 handleViewVehicle - currentUser keys:", currentUser ? Object.keys(currentUser) : "No user");
+  
+  // Fetch complete user data from API to ensure we have idNumber
+  const fetchCompleteUserData = async () => {
+    try {
+      const completeUser = await ApiService.getUserById(currentUser.userId);
+      console.log("🔍 handleViewVehicle - completeUser from API:", completeUser);
+      
+      navigate("/vehicle-profile", {
+        state: {
+          vehicle,
+          user: completeUser, // Use the complete user data from API
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching complete user data:", error);
+      // Fallback to current user data
+      navigate("/vehicle-profile", {
+        state: {
+          vehicle,
+          user: currentUser,
+        },
+      });
+    }
   };
 
+  fetchCompleteUserData();
+};
   // Fixed license type checking logic
   const canAccessService = (service) => {
     if (!service.requires) return true;
