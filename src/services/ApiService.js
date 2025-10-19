@@ -14,7 +14,7 @@ axios.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    config.headers['Content-Type'] = 'application/json';
+    // config.headers['Content-Type'] = 'application/json';
     return config;
   },
   (error) => {
@@ -22,20 +22,23 @@ axios.interceptors.request.use(
   }
 );
 
-// ✅ Handle authentication errors
-axios.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      localStorage.removeItem('role');
-      window.location.href = '/';
-    }
-    return Promise.reject(error);
-  }
-);
+// // ✅ Handle authentication errors - FIXED VERSION
+// axios.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     // ✅ DON'T redirect for login-related 401 errors
+//     const isLoginEndpoint = error.config?.url?.includes('/login');
+    
+//     if ((error.response?.status === 401 || error.response?.status === 403) && !isLoginEndpoint) {
+//       // Only redirect for authenticated endpoints, not login attempts
+//       localStorage.removeItem('token');
+//       localStorage.removeItem('user');
+//       localStorage.removeItem('role');
+//       window.location.href = '/';
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 function extractErrorMessage(error) {
   if (error.response) {
@@ -54,66 +57,82 @@ function extractErrorMessage(error) {
 class ApiService {
     
     // ==================== AUTHENTICATION ====================
-    static async registerUser(userData) {
-      try {
-        console.log("🔄 Attempting registration...", userData);
-        
-        const email = userData.contact.email;
-        const endpoint = email.endsWith('@admin.co.za') 
-          ? `${API_BASE_URL}/admins/create` 
-          : `${API_BASE_URL}/applicants/create`;
-        
-        console.log("📡 Calling:", endpoint);
-        
-        const response = await axios.post(endpoint, userData);
-        console.log("✅ Registration successful:", response.data);
-        return response.data;
-        
-      } catch (error) {
-        console.error("❌ Registration failed:", error);
-        const errorMsg = extractErrorMessage(error);
-        throw errorMsg;
-      }
-    }
+   static async registerUser(userData) {
+  try {
+    console.log("🔄 Attempting registration...", userData);
+    
+    const email = userData.contact.email;
+    const endpoint = email.endsWith('@admin.co.za') 
+      ? `${API_BASE_URL}/admins/create` 
+      : `${API_BASE_URL}/applicants/create`;
+    
+    console.log("📡 Calling:", endpoint);
+    
+    const response = await axios.post(endpoint, userData);
+    console.log("✅ Registration successful:", response.data);
+    return response.data;
+    
+  } catch (error) {
+    console.error("❌ Registration failed:", error);
+    const errorMsg = extractErrorMessage(error);
+    
+    // ✅ Return error object instead of throwing
+    return {
+      success: false,
+      error: errorMsg
+    };
+  }
+}
 
-    static async loginUser(email, password) {
-      try {
-        console.log("🔄 Attempting login...", email);
-        
-        let endpoint, requestData;
-        
-        // Determine which endpoint to use based on email domain
-        if (email.endsWith('@admin.co.za')) {
-          endpoint = `${API_BASE_URL}/admins/login`;
-          requestData = { contact: { email }, password };
-        } else {
-          endpoint = `${API_BASE_URL}/applicants/login`;
-          requestData = { contact: { email }, password };
-        }
-        
-        console.log("📡 Calling:", endpoint);
-        
-        const response = await axios.post(endpoint, requestData);
-        console.log("✅ Login response received:", response.data);
-        
-        if (response.data.success) {
-          // ✅ Store JWT token and user info
-          localStorage.setItem('token', response.data.token);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-          localStorage.setItem('role', response.data.role);
-          
-          console.log("✅ Login successful - data stored in localStorage");
-        }
-        
-        return response.data;
-        
-      } catch (error) {
-        console.error("❌ Login failed:", error);
-        const errorMsg = extractErrorMessage(error);
-        throw errorMsg;
-      }
+static async loginUser(email, password) {
+  try {
+    console.log("🔄 Attempting login...", email);
+    
+    let endpoint, requestData;
+    
+    // Determine which endpoint to use based on email domain
+    if (email.endsWith('@admin.co.za')) {
+      endpoint = `${API_BASE_URL}/admins/login`;
+      requestData = { contact: { email }, password };
+    } else {
+      endpoint = `${API_BASE_URL}/applicants/login`;
+      requestData = { contact: { email }, password };
     }
-
+    
+    console.log("📡 Calling:", endpoint);
+    
+    const response = await axios.post(endpoint, requestData);
+    console.log("✅ Login response received:", response.data);
+    
+    // ✅ FIX: Don't throw error for failed logins, just return the response
+    if (response.data.success) {
+      // ✅ Store JWT token and user info
+      localStorage.setItem('token', response.data.token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      localStorage.setItem('role', response.data.role);
+      
+      console.log("✅ Login successful - data stored in localStorage");
+    }
+    
+    return response.data; // Always return the response data
+    
+  } catch (error) {
+    console.error("❌ Login failed:", error);
+    
+    // ✅ FIX: Return the error response data instead of throwing
+    if (error.response && error.response.data) {
+      console.log("📥 Returning error response:", error.response.data);
+      return error.response.data; // Return the backend error message
+    }
+    
+    // For network errors, return a generic error object
+    return {
+      success: false,
+      message: "Network error. Please check your connection.",
+      status: "error"
+    };
+  }
+}
     // ✅ Check if user is authenticated
     static isAuthenticated() {
       return !!localStorage.getItem('token');
@@ -364,17 +383,29 @@ class ApiService {
         throw error;
       }
     }
-
+ // made changes here 
     static async updateVehicle(formData) {
       try {
-        const response = await axios.put(`${API_BASE_URL}/vehicle/update`, formData);
-        return response.data;
-      } catch (error) {
-        console.error("Error updating vehicle:", error.response?.data || error.message);
-        throw error;
+    console.log("🔄 Updating vehicle with FormData...");
+    
+    const response = await axios({
+      method: 'put',
+      url: `${API_BASE_URL}/vehicle/update`,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data', // ✅ Explicitly set for FormData
+        'Authorization': `Bearer ${getAuthToken()}`
       }
-    }
-
+    });
+    
+    console.log("✅ Vehicle updated successfully:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error updating vehicle:", error);
+    console.error("❌ Error details:", error.response?.data);
+    throw error;
+  }
+}
     static async getExpiredVehicles() {
       try {
         const response = await axios.get(`${API_BASE_URL}/vehicle/expired`);
@@ -587,6 +618,110 @@ class ApiService {
       }
     }
 
+  // ==================== PASSWORD RESET METHODS ====================
+
+// ✅ VERIFY EMAIL FOR PASSWORD RESET
+static async verifyEmailForPasswordReset(email) {
+  try {
+    console.log("🔄 Verifying email for password reset:", email);
+    
+    // Try applicant endpoint first
+    let response = await axios.post(
+      `${API_BASE_URL}/applicants/verify-email-password-reset`,
+      { email }
+    );
+    
+    // If applicant email not found, try admin endpoint
+    if (!response.data.success && response.data.message.includes("Applicant email not found")) {
+      console.log("🔄 Applicant email not found, trying admin endpoint...");
+      response = await axios.post(
+        `${API_BASE_URL}/admins/verify-email-password-reset`,
+        { email }
+      );
+    }
+    
+    console.log("✅ Email verification result:", response.data);
+    return response.data;
+    
+  } catch (error) {
+    console.error("❌ Error verifying email:", error);
+    const errorMsg = extractErrorMessage(error);
+    
+    return {
+      success: false,
+      error: errorMsg,
+      message: error.response?.data?.message || "Email not found or verification failed"
+    };
+  }
+}
+
+// ✅ RESET PASSWORD
+static async resetPassword(email, newPassword) {
+  try {
+    console.log("🔄 Resetting password for:", email);
+    
+    // Try applicant endpoint first
+    let response = await axios.post(
+      `${API_BASE_URL}/applicants/reset-password`,
+      { email, newPassword }
+    );
+    
+    // If applicant not found, try admin endpoint
+    if (!response.data.success && response.data.message.includes("Applicant not found")) {
+      console.log("🔄 Applicant not found, trying admin endpoint...");
+      response = await axios.post(
+        `${API_BASE_URL}/admins/reset-password`,
+        { email, newPassword }
+      );
+    }
+    
+    console.log("✅ Password reset result:", response.data);
+    return response.data;
+    
+  } catch (error) {
+    console.error("❌ Error resetting password:", error);
+    const errorMsg = extractErrorMessage(error);
+    
+    return {
+      success: false,
+      error: errorMsg,
+      message: error.response?.data?.message || "Failed to reset password"
+    };
+  }
+}
+
+// ✅ CHANGE PASSWORD (for logged-in users)
+static async changePassword(passwordData) {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    const role = localStorage.getItem('role');
+    
+    console.log("🔄 Changing password for role:", role);
+    
+    if (role === 'ROLE_ADMIN' || role === 'ADMIN') {
+      const response = await axios.put(
+        `${API_BASE_URL}/admins/change-password`,
+        passwordData
+      );
+      return response.data;
+    } else {
+      const response = await axios.put(
+        `${API_BASE_URL}/applicants/change-password`,
+        passwordData
+      );
+      return response.data;
+    }
+  } catch (error) {
+    console.error("❌ Error changing password:", error);
+    const errorMsg = extractErrorMessage(error);
+    
+    return {
+      success: false,
+      error: errorMsg,
+      message: error.response?.data?.message || "Failed to change password"
+    };
+  }
+}
 }
 
 export default ApiService;
