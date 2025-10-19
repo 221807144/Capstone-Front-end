@@ -158,7 +158,7 @@ const Ticket = ({ user }) => {
 
     const totalTickets = tickets.length;
     const totalDue = tickets
-        .filter(ticket => ticket.status === "UNPAID")
+        .filter(ticket => ticket.status === "PENDING")
         .reduce((sum, ticket) => sum + (ticket.ticketAmount || 0), 0);
 
     if (loading) {
@@ -213,7 +213,7 @@ const Ticket = ({ user }) => {
                                     ? new Date(ticket.issueDate).toLocaleDateString()
                                     : "Unknown"}
                             </p>
-                            {ticket.status === "UNPAID" && (
+                            {ticket.status === "PENDING" && (
                                 <button
                                     className="pay-button"
                                     onClick={() => handlePayTicket(ticket)}

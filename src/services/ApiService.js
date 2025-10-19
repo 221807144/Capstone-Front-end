@@ -731,6 +731,26 @@ static async changePassword(passwordData) {
     };
   }
 }
+    static async getAllVehicles() {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/vehicle/getAll`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching all vehicles:", error);
+            throw error;
+        }
+    }
+
+    static async createTicket(ticketData) {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/tickets/create`, ticketData);
+            return response.data;
+        } catch (error) {
+            console.error("Error creating ticket:", error);
+            throw error;
+        }
+    }
+
 }
 
 export default ApiService;
