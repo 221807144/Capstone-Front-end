@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect} from "react";
 import {
     Users,
     Calendar,
@@ -17,7 +17,7 @@ import ApiService from "../../services/ApiService";
 import SharedLayout from "../sharedPages/SharedLayout";
 
 // Custom Rand icon component
-const RandIcon = ({ size = 24, className = "" }) => (
+const RandIcon = ({size = 24, className = ""}) => (
     <svg
         width={size}
         height={size}
@@ -29,11 +29,11 @@ const RandIcon = ({ size = 24, className = "" }) => (
         strokeLinejoin="round"
         className={className}
     >
-        <path d="M7 20V4h6a4 4 0 0 1 0 8H7" />
-        <path d="M12 12l4 8" />
-        <line x1="4" y1="8" x2="4" y2="8" />
-        <line x1="4" y1="12" x2="4" y2="12" />
-        <line x1="4" y1="16" x2="4" y2="16" />
+        <path d="M7 20V4h6a4 4 0 0 1 0 8H7"/>
+        <path d="M12 12l4 8"/>
+        <line x1="4" y1="8" x2="4" y2="8"/>
+        <line x1="4" y1="12" x2="4" y2="12"/>
+        <line x1="4" y1="16" x2="4" y2="16"/>
     </svg>
 );
 
@@ -101,7 +101,7 @@ export default function AdminDashboard() {
     const createTicket = async () => {
         try {
             const ticketData = {
-                vehicle: { vehicleID: parseInt(ticketForm.vehicleId) },
+                vehicle: {vehicleID: parseInt(ticketForm.vehicleId)},
                 ticketType: ticketForm.ticketType,
                 status: ticketForm.status,
                 issueDate: ticketForm.issueDate,
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
                 ...prev,
                 applicants: (prev.applicants || []).map(applicant =>
                     applicant.userId === applicantId
-                        ? { ...applicant, status, reason }
+                        ? {...applicant, status, reason}
                         : applicant
                 )
             }));
@@ -209,13 +209,13 @@ export default function AdminDashboard() {
                 ...prev,
                 testAppointments: (prev.testAppointments || []).map(test =>
                     test.testAppointmentId === testAppointmentId
-                        ? { ...test, testResult, notes }
+                        ? {...test, testResult, notes}
                         : test
                 )
             }));
 
             setEditingTest(null);
-            setTestResultForm({ testResult: null, notes: "" });
+            setTestResultForm({testResult: null, notes: ""});
             alert("Test result updated successfully!");
         } catch (err) {
             console.error("Error updating test result:", err);
@@ -343,12 +343,12 @@ export default function AdminDashboard() {
             onClick={() => handleDelete(entity, id)}
             disabled={deletingId === id}
         >
-            {deletingId === id ? "Deleting..." : <Trash2 size={16} />}
+            {deletingId === id ? "Deleting..." : <Trash2 size={16}/>}
         </button>
     );
 
     const renderApplicantsTable = () => (
-        <div className="table-responsive" style={{ overflowX: "auto" }}>
+        <div className="table-responsive" style={{overflowX: "auto"}}>
             <table className="table table-striped table-bordered text-sm">
                 <thead className="table-dark">
                 <tr>
@@ -398,7 +398,7 @@ export default function AdminDashboard() {
                                         setData((prev) => ({
                                             ...prev,
                                             applicants: (prev.applicants || []).map((app) =>
-                                                app.userId === a.userId ? { ...app, status: newStatus } : app
+                                                app.userId === a.userId ? {...app, status: newStatus} : app
                                             ),
                                         }));
                                         try {
@@ -431,7 +431,7 @@ export default function AdminDashboard() {
                                         setData((prev) => ({
                                             ...prev,
                                             applicants: (prev.applicants || []).map((app) =>
-                                                app.userId === a.userId ? { ...app, reason: newReason } : app
+                                                app.userId === a.userId ? {...app, reason: newReason} : app
                                             ),
                                         }));
                                     }}
@@ -453,7 +453,7 @@ export default function AdminDashboard() {
                             <td>
                                 <div className="btn-group">
                                     <button className="btn btn-sm btn-outline-primary">
-                                        <Eye size={16} />
+                                        <Eye size={16}/>
                                     </button>
                                     {renderDeleteButton("applicant", a.userId)}
                                 </div>
@@ -476,7 +476,7 @@ export default function AdminDashboard() {
         if (!editingTest) return null;
 
         return (
-            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
                 <div className="modal-dialog">
                     <div className="modal-content">
                         <div className="modal-header">
@@ -486,7 +486,7 @@ export default function AdminDashboard() {
                                 className="btn-close"
                                 onClick={() => {
                                     setEditingTest(null);
-                                    setTestResultForm({ testResult: null, notes: "" });
+                                    setTestResultForm({testResult: null, notes: ""});
                                 }}
                             ></button>
                         </div>
@@ -501,9 +501,9 @@ export default function AdminDashboard() {
                                                 ? 'btn-success'
                                                 : 'btn-outline-success'
                                         }`}
-                                        onClick={() => setTestResultForm(prev => ({ ...prev, testResult: true }))}
+                                        onClick={() => setTestResultForm(prev => ({...prev, testResult: true}))}
                                     >
-                                        <CheckCircle size={16} className="me-1" />
+                                        <CheckCircle size={16} className="me-1"/>
                                         Pass
                                     </button>
                                     <button
@@ -513,9 +513,9 @@ export default function AdminDashboard() {
                                                 ? 'btn-danger'
                                                 : 'btn-outline-danger'
                                         }`}
-                                        onClick={() => setTestResultForm(prev => ({ ...prev, testResult: false }))}
+                                        onClick={() => setTestResultForm(prev => ({...prev, testResult: false}))}
                                     >
-                                        <XCircle size={16} className="me-1" />
+                                        <XCircle size={16} className="me-1"/>
                                         Fail
                                     </button>
                                 </div>
@@ -527,7 +527,7 @@ export default function AdminDashboard() {
                                     rows="3"
                                     placeholder="Add any notes about the test result..."
                                     value={testResultForm.notes}
-                                    onChange={(e) => setTestResultForm(prev => ({ ...prev, notes: e.target.value }))}
+                                    onChange={(e) => setTestResultForm(prev => ({...prev, notes: e.target.value}))}
                                 />
                             </div>
                         </div>
@@ -537,7 +537,7 @@ export default function AdminDashboard() {
                                 className="btn btn-secondary"
                                 onClick={() => {
                                     setEditingTest(null);
-                                    setTestResultForm({ testResult: null, notes: "" });
+                                    setTestResultForm({testResult: null, notes: ""});
                                 }}
                             >
                                 Cancel
@@ -561,7 +561,7 @@ export default function AdminDashboard() {
         if (!showTicketModal) return null;
 
         return (
-            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
                 <div className="modal-dialog">
                     <div className="modal-content">
                         <div className="modal-header">
@@ -586,7 +586,7 @@ export default function AdminDashboard() {
                                 <select
                                     className="form-select"
                                     value={ticketForm.vehicleId}
-                                    onChange={(e) => setTicketForm(prev => ({ ...prev, vehicleId: e.target.value }))}
+                                    onChange={(e) => setTicketForm(prev => ({...prev, vehicleId: e.target.value}))}
                                     required
                                 >
                                     <option value="">Select a vehicle</option>
@@ -602,7 +602,7 @@ export default function AdminDashboard() {
                                 <select
                                     className="form-select"
                                     value={ticketForm.ticketType}
-                                    onChange={(e) => setTicketForm(prev => ({ ...prev, ticketType: e.target.value }))}
+                                    onChange={(e) => setTicketForm(prev => ({...prev, ticketType: e.target.value}))}
                                     required
                                 >
                                     <option value="">Select ticket type</option>
@@ -628,7 +628,8 @@ export default function AdminDashboard() {
                                     className="form-select"
                                     value="UNPAID"
                                     disabled // 👈 lock it
-                                    onChange={() => {}} // no-op
+                                    onChange={() => {
+                                    }} // no-op
                                 >
                                     <option value="UNPAID">Unpaid</option>
                                 </select>
@@ -677,7 +678,7 @@ export default function AdminDashboard() {
     const renderTestAppointmentsTable = () => (
         <>
             {renderTestResultModal()}
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
+            <div className="table-responsive" style={{overflowX: "auto"}}>
                 <table className="table table-striped table-bordered text-sm">
                     <thead className="table-dark">
                     <tr>
@@ -735,7 +736,7 @@ export default function AdminDashboard() {
                                             }}
                                             title="Update Test Result"
                                         >
-                                            <Edit size={16} />
+                                            <Edit size={16}/>
                                         </button>
                                         {renderDeleteButton("testAppointment", t.testAppointmentId)}
                                     </div>
@@ -756,7 +757,7 @@ export default function AdminDashboard() {
     );
 
     const renderVehiclesTable = () => (
-        <div className="table-responsive" style={{ overflowX: "auto" }}>
+        <div className="table-responsive" style={{overflowX: "auto"}}>
             <table className="table table-striped table-bordered text-sm">
                 <thead className="table-dark">
                 <tr>
@@ -786,7 +787,7 @@ export default function AdminDashboard() {
                             <td>
                                 <div className="btn-group">
                                     <button className="btn btn-sm btn-outline-primary">
-                                        <Eye size={16} />
+                                        <Eye size={16}/>
                                     </button>
                                     {renderDeleteButton("vehicle", v.vehicleID)}
                                 </div>
@@ -806,7 +807,7 @@ export default function AdminDashboard() {
     );
 
     const renderPaymentsTable = () => (
-        <div className="table-responsive" style={{ overflowX: "auto" }}>
+        <div className="table-responsive" style={{overflowX: "auto"}}>
             <table className="table table-striped table-bordered text-sm">
                 <thead className="table-dark">
                 <tr>
@@ -817,7 +818,6 @@ export default function AdminDashboard() {
                     <th>Date</th>
                     <th>Cardholder</th>
                     <th>Status</th>
-                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -839,7 +839,6 @@ export default function AdminDashboard() {
                     {p.status || 'COMPLETED'}
                   </span>
                             </td>
-                            <td>{renderDeleteButton("payment", p.paymentId)}</td>
                         </tr>
                     ))
                 ) : (
@@ -855,7 +854,7 @@ export default function AdminDashboard() {
     );
 
     const renderVehicleDiscsTable = () => (
-        <div className="table-responsive" style={{ overflowX: "auto" }}>
+        <div className="table-responsive" style={{overflowX: "auto"}}>
             <table className="table table-striped table-bordered text-sm">
                 <thead className="table-dark">
                 <tr>
@@ -890,13 +889,13 @@ export default function AdminDashboard() {
     );
 
     const renderTicketsTable = () => (
-        <div className="table-responsive" style={{ overflowX: "auto" }}>
+        <div className="table-responsive" style={{overflowX: "auto"}}>
             <div className="mb-3">
                 <button
                     className="btn btn-primary"
                     onClick={() => setShowTicketModal(true)}
                 >
-                    <PlusCircle size={16} className="me-2" />
+                    <PlusCircle size={16} className="me-2"/>
                     Add Ticket
                 </button>
             </div>
@@ -910,7 +909,6 @@ export default function AdminDashboard() {
                     <th>Issue Date</th>
                     <th>Status</th>
                     <th>Vehicle</th>
-                    <th>Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -923,7 +921,6 @@ export default function AdminDashboard() {
                             <td>{t.issueDate ? new Date(t.issueDate).toLocaleDateString() : "-"}</td>
                             <td>{t.status}</td>
                             <td>{t.vehicle ? `${t.vehicle.vehicleName} (${t.vehicle.licensePlate})` : "-"}</td>
-                            <td>{renderDeleteButton("ticket", t.ticketId)}</td>
                         </tr>
                     ))
                 ) : (
@@ -941,7 +938,7 @@ export default function AdminDashboard() {
     const renderTabContent = () => {
         if (loading) return (
             <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status" />
+                <div className="spinner-border text-primary" role="status"/>
                 <p className="mt-2">Loading data...</p>
             </div>
         );
@@ -954,13 +951,20 @@ export default function AdminDashboard() {
         );
 
         switch (selectedTab) {
-            case "applicants": return renderApplicantsTable();
-            case "vehicles": return renderVehiclesTable();
-            case "payments": return renderPaymentsTable();
-            case "testAppointments": return renderTestAppointmentsTable();
-            case "vehicleDiscs": return renderVehicleDiscsTable();
-            case "tickets": return renderTicketsTable();
-            default: return <div>Select a tab to view data</div>;
+            case "applicants":
+                return renderApplicantsTable();
+            case "vehicles":
+                return renderVehiclesTable();
+            case "payments":
+                return renderPaymentsTable();
+            case "testAppointments":
+                return renderTestAppointmentsTable();
+            case "vehicleDiscs":
+                return renderVehicleDiscsTable();
+            case "tickets":
+                return renderTicketsTable();
+            default:
+                return <div>Select a tab to view data</div>;
         }
     };
 
@@ -971,7 +975,7 @@ export default function AdminDashboard() {
                     <div className="card-body">
                         <div className="input-group">
               <span className="input-group-text">
-                <Search size={20} />
+                <Search size={20}/>
               </span>
                             <input
                                 type="text"
@@ -1011,7 +1015,7 @@ export default function AdminDashboard() {
                                             )}
                                         </div>
                                         <div className={`p-3 rounded ${stat.color} text-white`}>
-                                            <Icon className="h-6 w-6" />
+                                            <Icon className="h-6 w-6"/>
                                         </div>
                                     </div>
                                 </div>
@@ -1026,9 +1030,10 @@ export default function AdminDashboard() {
                             <div className="card-header bg-white">
                                 <div className="d-flex justify-content-between align-items-center">
                                     <ul className="nav nav-tabs card-header-tabs flex-wrap">
-                                        {["applicants","vehicles","payments","testAppointments","vehicleDiscs","tickets"].map((tab) => (
+                                        {["applicants", "vehicles", "payments", "testAppointments", "vehicleDiscs", "tickets"].map((tab) => (
                                             <li key={tab} className="nav-item">
-                                                <button className={`nav-link ${selectedTab === tab ? "active" : ""}`} onClick={() => setSelectedTab(tab)}>
+                                                <button className={`nav-link ${selectedTab === tab ? "active" : ""}`}
+                                                        onClick={() => setSelectedTab(tab)}>
                                                     {tab.charAt(0).toUpperCase() + tab.slice(1)}
                                                 </button>
                                             </li>
@@ -1066,7 +1071,8 @@ export default function AdminDashboard() {
                                             <div className="border-start border-success ps-3">
                                                 <h6 className="fw-bold mb-1">Test appointment created</h6>
                                                 <p className="text-muted small mb-1">{t.testype || "Test"}</p>
-                                                <small className="text-muted">{new Date(t.testDate).toLocaleDateString()}</small>
+                                                <small
+                                                    className="text-muted">{new Date(t.testDate).toLocaleDateString()}</small>
                                             </div>
                                         </div>
                                     ))}
