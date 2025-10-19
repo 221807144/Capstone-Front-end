@@ -520,6 +520,15 @@ static async loginUser(email, password) {
         throw error;
       }
     }
+    static async deletePayment(id) {
+  try {
+    const response = await axios.delete(`${API_BASE_URL}/payments/delete/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting payment:", error.response || error.message);
+    throw error;
+  }
+}
 
     static async deleteTestAppointment(id) {
       try {
