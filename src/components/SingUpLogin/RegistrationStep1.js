@@ -42,6 +42,31 @@ export default function RegistrationStep1({ onNext }) {
 
   const validateForm = () => {
     // Email validation based on selected role
+     // Check that all required fields are filled
+  const requiredFields = [
+    "firstName",
+    "lastName",
+    "idNumber",
+    "email",
+    "contactNumber",
+    "street",
+    "city",
+    "province",
+    "country",
+    "dobYear",
+    "dobMonth",
+    "dobDay",
+    "password",
+    "confirmPassword"
+  ];
+
+  for (let field of requiredFields) {
+    if (!formData[field] || formData[field].trim() === "") {
+      setError(`Please fill in the ${field.replace(/([A-Z])/g, ' $1')}`);
+      return false;
+    }
+  }
+
     if (formData.role === "ADMIN" && !formData.email.endsWith("@admin.co.za")) {
       setError("Admin registration requires  valid email");
       return false;
@@ -162,36 +187,26 @@ const handleSubmit = async () => {
     },
   };
 
-  try {
-    const result = await ApiService.registerUser(payload);
-    console.log("Registration response:", result);
-    
-    // ✅ CHECK IF REGISTRATION WAS SUCCESSFUL BEFORE NAVIGATING
-    if (result && !result.error) {
-      console.log("✅ Registration successful!");
-      
-      // Show appropriate success message based on role
-      if (formData.role === "ADMIN") {
-        alert("Admin registration successful!");
-      } else {
-        alert("Applicant registration successful!");
-      }
-      
-      onNext(payload);
-      navigate("/"); // ✅ ONLY navigate on success
-    } else {
-      // ✅ Registration failed but didn't throw error - show message and stay on page
-      console.log("❌ Registration failed with error:", result.error);
-      setError(result.error || "Registration failed. Please try again.");
-      // User stays on registration page to fix the issue
-    }
-    
-  } catch (err) {
-    console.error("Registration failed with exception:", err);
-    setError("Registration failed: " + (err.message || err));
-    // ✅ User stays on registration page to fix the issue
+try {
+  const result = await ApiService.registerUser(payload);
+  console.log("Registration response:", result);
+
+  if (result.success) {
+    alert(`${formData.role} registration successful!`);
+    onNext(payload);
+    navigate("/");
+  } else {
+    setError(result.error);
+    alert(`❌ Registration failed: ${result.error}`);
   }
+
+} catch (err) {
+  console.error("Exception during registration:", err);
+  alert("Registration failed due to a system error. Please try again.");
+}
+
 };
+
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="card shadow p-4 w-100" style={{ maxWidth: 600 }}>

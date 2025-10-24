@@ -11,26 +11,32 @@ export default function VehicleProfile() {
   const [vehicle, setVehicle] = useState(initialVehicle || null);
   const [editMode, setEditMode] = useState(false);
 
-   // ✅ ADD DEBUGGING
+  // ✅ ADD DEBUGGING
   useEffect(() => {
     console.log("🔍 VehicleProfile - Full location.state:", location.state);
-    console.log("🔍 VehicleProfile - User object:", user);
-    console.log("🔍 VehicleProfile - User properties:", {
-      firstName: user?.firstName,
-      lastName: user?.lastName,
-      idNumber: user?.idNumber,
-      userId: user?.userId,
-      email: user?.email
+    console.log("🔍 VehicleProfile - Vehicle object:", initialVehicle);
+    console.log("🔍 VehicleProfile - Vehicle properties:", {
+      registrationFee: initialVehicle?.registrationFee,
+      vehicleDisc: initialVehicle?.vehicleDisc,
+      payment: initialVehicle?.payment,
+      allKeys: initialVehicle ? Object.keys(initialVehicle) : "No vehicle"
     });
-    console.log("🔍 VehicleProfile - All user keys:", user ? Object.keys(user) : "No user");
-  }, [location.state, user]);
+    
+    // Deep log vehicleDisc if it exists
+    if (initialVehicle?.vehicleDisc) {
+      console.log("🔍 VehicleProfile - vehicleDisc object:", initialVehicle.vehicleDisc);
+      console.log("🔍 VehicleProfile - vehicleDisc keys:", Object.keys(initialVehicle.vehicleDisc));
+    }
+    
+    console.log("🔍 VehicleProfile - User object:", user);
+  }, [location.state, user, initialVehicle]);
 
   // Vehicle fields
   const [vehicleName, setVehicleName] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [status, setStatus] = useState("");
-  const [registrationFee, setRegistrationFee] = useState(0);
+  const [registrationFee, setRegistrationFee] = useState(850); // ✅ CHANGED: Hardcoded to 850
   const [vehicleColor, setVehicleColor] = useState("");
   const [vehicleYear, setVehicleYear] = useState("");
   const [engineNumber, setEngineNumber] = useState("");
@@ -46,35 +52,58 @@ export default function VehicleProfile() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // ✅ REMOVED: The complex getRegistrationFee function since we're hardcoding
+
+  // ✅ IMPROVED: Function to get disc dates from multiple possible locations
+  const getDiscDates = (vehicleData) => {
+    if (!vehicleData) return { issueDate: null, expiryDate: null };
+    
+    const issueDate = 
+      vehicleData.discIssueDate ? new Date(vehicleData.discIssueDate) :
+      (vehicleData.vehicleDisc && vehicleData.vehicleDisc.issueDate) ? new Date(vehicleData.vehicleDisc.issueDate) :
+      (vehicleData.issueDate) ? new Date(vehicleData.issueDate) : null;
+    
+    const expiryDate = 
+      vehicleData.discExpiryDate ? new Date(vehicleData.discExpiryDate) :
+      (vehicleData.vehicleDisc && vehicleData.vehicleDisc.expiryDate) ? new Date(vehicleData.vehicleDisc.expiryDate) :
+      (vehicleData.expiryDate) ? new Date(vehicleData.expiryDate) : null;
+    
+    return { issueDate, expiryDate };
+  };
+
   useEffect(() => {
     if (!initialVehicle) return;
 
+    console.log("🔄 Initializing vehicle data...");
+    
     setVehicle(initialVehicle);
-    setVehicleName(initialVehicle.vehicleName);
+    setVehicleName(initialVehicle.vehicleName || "");
     setVehicleType(initialVehicle.vehicleType || "N/A");
-    setVehicleModel(initialVehicle.vehicleModel);
+    setVehicleModel(initialVehicle.vehicleModel || "");
     setStatus(initialVehicle.status || "Registered");
-    setVehicleColor(initialVehicle.vehicleColor);
-    setVehicleYear(initialVehicle.vehicleYear);
-    setEngineNumber(initialVehicle.engineNumber);
-    setLicensePlate(initialVehicle.licensePlate);
+    setVehicleColor(initialVehicle.vehicleColor || "");
+    setVehicleYear(initialVehicle.vehicleYear || "");
+    setEngineNumber(initialVehicle.engineNumber || "");
+    setLicensePlate(initialVehicle.licensePlate || "");
     
     // FIX: Set image from vehicle data, not from 'image' property
     setVehicleImage(initialVehicle.vehicleImage || null);
 
-    const fee = initialVehicle.registrationFee ||
-      (initialVehicle.vehicleDisc && initialVehicle.vehicleDisc.amount) || 0;
-    setRegistrationFee(fee);
+    // ✅ CHANGED: No need to call getRegistrationFee, we're using hardcoded 850
 
-    const disc = initialVehicle.vehicleDisc || {};
-    const issueDate = initialVehicle.discIssueDate ? new Date(initialVehicle.discIssueDate) :
-        disc.issueDate ? new Date(disc.issueDate) : null;
-    const expiryDate = initialVehicle.discExpiryDate ? new Date(initialVehicle.discExpiryDate) :
-        disc.expiryDate ? new Date(disc.expiryDate) : null;
-
+    // ✅ USE IMPROVED DATE FUNCTION
+    const { issueDate, expiryDate } = getDiscDates(initialVehicle);
     setDiscIssueDate(issueDate);
     setDiscExpiryDate(expiryDate);
-    setDiscStatus(!issueDate || !expiryDate ? "N/A" : new Date() > expiryDate ? "Expired" : "Valid");
+    
+    const discStatus = !issueDate || !expiryDate ? "N/A" : new Date() > expiryDate ? "Expired" : "Valid";
+    setDiscStatus(discStatus);
+
+    console.log("✅ Vehicle initialization complete:", {
+      issueDate,
+      expiryDate,
+      discStatus
+    });
   }, [initialVehicle]);
 
   // FIX: Proper image upload handler
@@ -120,6 +149,8 @@ export default function VehicleProfile() {
       setVehicle(updatedVehicle);
       setVehicleImage(updatedVehicle.vehicleImage); // Use the image from backend
       setSelectedImageFile(null); // Clear the selected file
+      
+      // ✅ CHANGED: No need to update registration fee, it's hardcoded
       
       setSuccess(true);
       setError("");
@@ -201,10 +232,18 @@ export default function VehicleProfile() {
               <label className="form-label">Status</label>
               <input type="text" value={status} className="form-control" disabled />
             </div>
+            
+            {/* ✅ REGISTRATION FEE - Now hardcoded to 850 */}
             <div className="col-md-6 mb-3">
               <label className="form-label">Registration Fee</label>
-              <input type="number" value={registrationFee} className="form-control" disabled />
+              <input 
+                type="text" 
+                value="R 850" // ✅ CHANGED: Hardcoded value
+                className="form-control" 
+                disabled 
+              />
             </div>
+            
             <div className="col-md-6 mb-3">
               <label className="form-label">Disc Issue Date</label>
               <input
@@ -225,7 +264,15 @@ export default function VehicleProfile() {
             </div>
             <div className="col-md-6 mb-3">
               <label className="form-label">Disc Status</label>
-              <input type="text" value={discStatus} className="form-control" disabled />
+              <input 
+                type="text" 
+                value={discStatus} 
+                className={`form-control ${
+                  discStatus === 'Valid' ? 'text-success' : 
+                  discStatus === 'Expired' ? 'text-danger' : 'text-warning'
+                }`} 
+                disabled 
+              />
             </div>
 
             {/* Editable fields */}
