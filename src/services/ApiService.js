@@ -57,36 +57,69 @@ function extractErrorMessage(error) {
 class ApiService {
     
     // ==================== AUTHENTICATION ====================
-   static async registerUser(userData) {
+static async registerUser(userData) {
   try {
-    console.log("🔄 Attempting registration...", userData);
-    
+    console.log("📤 Attempting registration...", userData);
+
     const email = userData.contact.email;
-    const endpoint = email.endsWith('@admin.co.za') 
-      ? `${API_BASE_URL}/admins/create` 
+    const endpoint = email.endsWith('@admin.co.za')
+      ? `${API_BASE_URL}/admins/create`
       : `${API_BASE_URL}/applicants/create`;
-    
-    console.log("📡 Calling:", endpoint);
-    
+
+    console.log("📡 Calling endpoint:", endpoint);
+
     const response = await axios.post(endpoint, userData);
-    console.log("✅ Registration successful:", response.data);
-    return response.data;
-    
+    console.log("✅ Registration response:", response.data);
+
+    if (response.data?.success) {
+      return response.data;
+    } else {
+      const message = response.data?.message || "Registration failed.";
+      return { success: false, error: message, message };
+    }
+
   } catch (error) {
     console.error("❌ Registration failed:", error);
-    const errorMsg = extractErrorMessage(error);
-    
-    // ✅ Return error object instead of throwing
-    return {
-      success: false,
-      error: errorMsg
-    };
+
+    let errorMsg = "Registration failed.";
+
+    if (error.response) {
+      const { status, data } = error.response;
+      console.log("⚠️ Server responded with:", status, data);
+
+      // Handle HTTP status codes specifically
+      if (status === 400) errorMsg = data.message || "Invalid input data.";
+      else if (status === 401) errorMsg = "Unauthorized: Please log in first.";
+      else if (status === 403) errorMsg = "Access denied: You are not allowed to perform this action.";
+      else if (status === 404) errorMsg = "Registration service not found.";
+      else if (status >= 500) errorMsg = "Server error. Please try again later.";
+
+      // Handle duplicate or validation errors from backend
+      const msg = data?.message || data?.error || "";
+      if (msg.includes("Duplicate entry") && msg.includes("id_number"))
+        errorMsg = "This ID number is already registered.";
+      else if (msg.includes("Duplicate entry") && msg.includes("email"))
+        errorMsg = "This email address is already registered.";
+      else if (msg.includes("Duplicate entry") && msg.includes("cellphone"))
+        errorMsg = "This cellphone number is already registered.";
+      else if (msg.includes("Invalid email format"))
+        errorMsg = "Please enter a valid email address.";
+      else if (msg.includes("Missing required fields"))
+        errorMsg = "Please fill in all required fields.";
+    } else if (error.request) {
+      errorMsg = "No response from server. Check your internet connection.";
+    } else {
+      errorMsg = error.message || "Unexpected error occurred.";
+    }
+
+    return { success: false, error: errorMsg, message: errorMsg };
   }
 }
 
+
 static async loginUser(email, password) {
   try {
-    console.log("🔄 Attempting login...", email);
+    console.log(" Attempting login...", email);
     
     let endpoint, requestData;
     
@@ -99,29 +132,29 @@ static async loginUser(email, password) {
       requestData = { contact: { email }, password };
     }
     
-    console.log("📡 Calling:", endpoint);
+    console.log(" Calling:", endpoint);
     
     const response = await axios.post(endpoint, requestData);
-    console.log("✅ Login response received:", response.data);
+    console.log(" Login response received:", response.data);
     
-    // ✅ FIX: Don't throw error for failed logins, just return the response
+    // FIX: Don't throw error for failed logins, just return the response
     if (response.data.success) {
-      // ✅ Store JWT token and user info
+      //  Store JWT token and user info
       localStorage.setItem('token', response.data.token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
       localStorage.setItem('role', response.data.role);
       
-      console.log("✅ Login successful - data stored in localStorage");
+      console.log("Login successful - data stored in localStorage");
     }
     
     return response.data; // Always return the response data
     
   } catch (error) {
-    console.error("❌ Login failed:", error);
+    console.error(" Login failed:", error);
     
-    // ✅ FIX: Return the error response data instead of throwing
+    //  FIX: Return the error response data instead of throwing
     if (error.response && error.response.data) {
-      console.log("📥 Returning error response:", error.response.data);
+      console.log(" Returning error response:", error.response.data);
       return error.response.data; // Return the backend error message
     }
     
@@ -161,14 +194,14 @@ static async loginUser(email, password) {
     // ✅ GET APPLICANT BY ID - CRITICAL METHOD THAT WAS MISSING
     static async getApplicantById(userId) {
       try {
-        console.log("🔄 Getting applicant by ID:", userId);
+        console.log(" Getting applicant by ID:", userId);
         const response = await axios.get(
           `${API_BASE_URL}/applicants/${userId}`
         );
-        console.log("✅ Applicant data received:", response.data);
+        console.log(" Applicant data received:", response.data);
         return response.data;
       } catch (error) {
-        console.error("❌ Error getting applicant:", error);
+        console.error(" Error getting applicant:", error);
         throw error;
       }
     }
@@ -176,42 +209,42 @@ static async loginUser(email, password) {
     // ✅ FIXED: UPDATE APPLICANT - NOW ACCEPTS ONLY ONE PARAMETER
     static async updateApplicant(applicantData) {
       try {
-        console.log("🔄 Updating applicant with data:", applicantData);
-        console.log("📦 Full update data:", applicantData);
+        console.log("  Updating applicant with data:", applicantData);
+        console.log(" Full update data:", applicantData);
         
         // ✅ FIX: Use the applicantData directly (no userId parameter)
         const updateData = {
           ...applicantData
         };
         
-        console.log("📤 Final update data being sent:", updateData);
+        console.log(" Final update data being sent:", updateData);
         
         const response = await axios.put(
           `${API_BASE_URL}/applicants/update`,
           updateData
         );
-        console.log("✅ Applicant updated successfully:", response.data);
+        console.log(" Applicant updated successfully:", response.data);
         return response.data;
       } catch (error) {
-        console.error("❌ Error updating applicant:", error);
+        console.error(" Error updating applicant:", error);
         throw error;
       }
     }
 
     // ✅ TEMPORARY DEBUG FUNCTION - Add this to test the update
     static async debugUpdateApplicant(testData) {
-      console.log('🐛 DEBUG: Testing updateApplicant with:', testData);
+      console.log(' DEBUG: Testing updateApplicant with:', testData);
       
       try {
         const response = await axios.put(
           `${API_BASE_URL}/applicants/update`,
           testData
         );
-        console.log('✅ DEBUG: Update successful:', response.data);
+        console.log(' DEBUG: Update successful:', response.data);
         return response.data;
       } catch (error) {
-        console.error('❌ DEBUG: Update failed:', error);
-        console.error('❌ DEBUG: Error response:', error.response?.data);
+        console.error(' DEBUG: Update failed:', error);
+        console.error(' DEBUG: Error response:', error.response?.data);
         throw error;
       }
     }
@@ -221,15 +254,15 @@ static async loginUser(email, password) {
     // ✅ CREATE LICENSE
     static async createLicense(licenseData) {
       try {
-        console.log("🔄 Creating license:", licenseData);
+        console.log(" Creating license:", licenseData);
         const response = await axios.post(
           `${API_BASE_URL}/license/create`,
           licenseData
         );
-        console.log("✅ License created successfully:", response.data);
+        console.log(" License created successfully:", response.data);
         return { success: true, data: response.data };
       } catch (error) {
-        console.error("❌ License creation error:", error);
+        console.error(" License creation error:", error);
         return { success: false, error: extractErrorMessage(error) };
       }
     }
@@ -237,15 +270,15 @@ static async loginUser(email, password) {
     // ✅ CREATE LEARNERS
     static async createLearners(learnersData) {
       try {
-        console.log("🔄 Creating learners:", learnersData);
+        console.log(" Creating learners:", learnersData);
         const response = await axios.post(
           `${API_BASE_URL}/learners/create`,
           learnersData
         );
-        console.log("✅ Learners created successfully:", response.data);
+        console.log(" Learners created successfully:", response.data);
         return { success: true, data: response.data };
       } catch (error) {
-        console.error("❌ Learners creation error:", error);
+        console.error(" Learners creation error:", error);
         return { success: false, error: extractErrorMessage(error) };
       }
     }
@@ -253,13 +286,13 @@ static async loginUser(email, password) {
     // ✅ GET LICENSE BY USER
     static async getLicenseByUser(userId) {
       try {
-        console.log("🔄 Getting license for user:", userId);
+        console.log(" Getting license for user:", userId);
         const response = await axios.get(
           `${API_BASE_URL}/license/user/${userId}`
         );
         return response.data;
       } catch (error) {
-        console.error("❌ Error fetching license:", error);
+        console.error(" Error fetching license:", error);
         throw error;
       }
     }
@@ -267,13 +300,13 @@ static async loginUser(email, password) {
     // ✅ GET LEARNERS BY USER
     static async getLearnersByUser(userId) {
       try {
-        console.log("🔄 Getting learners for user:", userId);
+        console.log(" Getting learners for user:", userId);
         const response = await axios.get(
           `${API_BASE_URL}/learners/user/${userId}`
         );
         return response.data;
       } catch (error) {
-        console.error("❌ Error fetching learners:", error);
+        console.error(" Error fetching learners:", error);
         throw error;
       }
     }
@@ -386,7 +419,7 @@ static async loginUser(email, password) {
  // made changes here 
     static async updateVehicle(formData) {
       try {
-    console.log("🔄 Updating vehicle with FormData...");
+    console.log(" Updating vehicle with FormData...");
     
     const response = await axios({
       method: 'put',
@@ -398,11 +431,11 @@ static async loginUser(email, password) {
       }
     });
     
-    console.log("✅ Vehicle updated successfully:", response.data);
+    console.log(" Vehicle updated successfully:", response.data);
     return response.data;
   } catch (error) {
-    console.error("❌ Error updating vehicle:", error);
-    console.error("❌ Error details:", error.response?.data);
+    console.error(" Error updating vehicle:", error);
+    console.error(" Error details:", error.response?.data);
     throw error;
   }
 }
@@ -632,7 +665,7 @@ static async loginUser(email, password) {
 // ✅ VERIFY EMAIL FOR PASSWORD RESET
 static async verifyEmailForPasswordReset(email) {
   try {
-    console.log("🔄 Verifying email for password reset:", email);
+    console.log("Verifying email for password reset:", email);
     
     // Try applicant endpoint first
     let response = await axios.post(
@@ -642,18 +675,18 @@ static async verifyEmailForPasswordReset(email) {
     
     // If applicant email not found, try admin endpoint
     if (!response.data.success && response.data.message.includes("Applicant email not found")) {
-      console.log("🔄 Applicant email not found, trying admin endpoint...");
+      console.log(" Applicant email not found, trying admin endpoint...");
       response = await axios.post(
         `${API_BASE_URL}/admins/verify-email-password-reset`,
         { email }
       );
     }
     
-    console.log("✅ Email verification result:", response.data);
+    console.log(" Email verification result:", response.data);
     return response.data;
     
   } catch (error) {
-    console.error("❌ Error verifying email:", error);
+    console.error(" Error verifying email:", error);
     const errorMsg = extractErrorMessage(error);
     
     return {
@@ -667,7 +700,7 @@ static async verifyEmailForPasswordReset(email) {
 // ✅ RESET PASSWORD
 static async resetPassword(email, newPassword) {
   try {
-    console.log("🔄 Resetting password for:", email);
+    console.log(" Resetting password for:", email);
     
     // Try applicant endpoint first
     let response = await axios.post(
@@ -677,18 +710,18 @@ static async resetPassword(email, newPassword) {
     
     // If applicant not found, try admin endpoint
     if (!response.data.success && response.data.message.includes("Applicant not found")) {
-      console.log("🔄 Applicant not found, trying admin endpoint...");
+      console.log(" Applicant not found, trying admin endpoint...");
       response = await axios.post(
         `${API_BASE_URL}/admins/reset-password`,
         { email, newPassword }
       );
     }
     
-    console.log("✅ Password reset result:", response.data);
+    console.log(" Password reset result:", response.data);
     return response.data;
     
   } catch (error) {
-    console.error("❌ Error resetting password:", error);
+    console.error(" Error resetting password:", error);
     const errorMsg = extractErrorMessage(error);
     
     return {
@@ -705,7 +738,7 @@ static async changePassword(passwordData) {
     const user = JSON.parse(localStorage.getItem('user'));
     const role = localStorage.getItem('role');
     
-    console.log("🔄 Changing password for role:", role);
+    console.log(" Changing password for role:", role);
     
     if (role === 'ROLE_ADMIN' || role === 'ADMIN') {
       const response = await axios.put(
@@ -721,7 +754,7 @@ static async changePassword(passwordData) {
       return response.data;
     }
   } catch (error) {
-    console.error("❌ Error changing password:", error);
+    console.error(" Error changing password:", error);
     const errorMsg = extractErrorMessage(error);
     
     return {
@@ -750,6 +783,59 @@ static async changePassword(passwordData) {
             throw error;
         }
     }
+
+     // ==================== APPLICANT DOCUMENTS - LICENSE & LEARNERS ====================
+
+    // ✅ SAVE LICENSE FOR APPLICANT
+    static async saveLicense(applicantId, licenseData) {
+      try {
+        console.log("💾 Saving license for applicant:", applicantId, licenseData);
+        
+        const response = await axios.post(
+          `${API_BASE_URL}/applicant/documents/${applicantId}/license`,
+          licenseData
+        );
+        
+        console.log("✅ License saved successfully:", response.data);
+        return response.data;
+        
+      } catch (error) {
+        console.error("❌ Error saving license:", error);
+        const errorMsg = extractErrorMessage(error);
+        
+        return {
+          success: false,
+          error: errorMsg,
+          message: error.response?.data?.message || "Failed to save license"
+        };
+      }
+    }
+
+    // ✅ SAVE LEARNERS FOR APPLICANT
+    static async saveLearners(applicantId, learnersData) {
+      try {
+        console.log("💾 Saving learners for applicant:", applicantId, learnersData);
+        
+        const response = await axios.post(
+          `${API_BASE_URL}/applicant/documents/${applicantId}/learners`,
+          learnersData
+        );
+        
+        console.log("✅ Learners saved successfully:", response.data);
+        return response.data;
+        
+      } catch (error) {
+        console.error("❌ Error saving learners:", error);
+        const errorMsg = extractErrorMessage(error);
+        
+        return {
+          success: false,
+          error: errorMsg,
+          message: error.response?.data?.message || "Failed to save learners license"
+        };
+      }
+    }
+
 
 }
 
