@@ -17,6 +17,7 @@ import SharedLayout from "./components/sharedPages/SharedLayout";
 import VehicleProfile from "./components/applicant/VehicleProfile";
 import Profile from "./components/applicant/Profile";
 import ChangePassword from "./components/SingUpLogin/ChangePassword";
+import LandingPage from "./components/LandingPage";
 
 export default function App() {
     const [user, setUser] = useState(null);
@@ -104,7 +105,8 @@ export default function App() {
         <Router>
             <Routes>
                 {/* Public routes */}
-                <Route path="/" element={<LoginScreen onLogin={handleLogin}/>}/>
+                <Route path="/" element={<LandingPage/>}/>
+                <Route path="/login" element={<LoginScreen onLogin={handleLogin}/>}/>
                 <Route path="/register" element={<RegistrationStep1 onNext={handleRegisterNext}/>}/>
                 
                 {/* Protected Applicant Routes */}
