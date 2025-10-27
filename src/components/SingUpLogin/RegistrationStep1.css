@@ -1,0 +1,340 @@
+.registration-background {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 20px;
+    overflow: hidden;
+    background-color: #e8eef1;
+}
+
+.registration-back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    background-color: #057dcd;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.registration-back-button:hover {
+    background-color: #0468a8;
+}
+
+.registration-back-icon {
+    margin-right: 8px;
+}
+
+.registration-container {
+    width: 100%;
+    max-width: 120vh;
+    max-height: 85vh;
+    padding: 0 20px;
+    z-index: 1;
+    display: flex;
+    margin-top: 40px;
+}
+
+.registration-side {
+    width: 50%;
+    background-color: #0468a8;
+    border-radius: 12px 0 0 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.registration-side img {
+    width: 150px;
+    margin: 20px;
+}
+
+.registration-side h2 {
+    text-align: center;
+    color: white;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+.registration-side p {
+    color: white;
+    width: 80%;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.registration-card {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 8px 32px rgba(30, 61, 88, 0.15);
+    padding: 40px 60px;
+    width: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    overflow-y: auto;
+    max-height: 90vh;
+}
+
+.registration-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.registration-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1e3d58;
+    text-align: center;
+}
+
+.registration-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.registration-error-message {
+    background-color: #fee;
+    color: #c33;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid #fcc;
+    text-align: center;
+}
+
+.registration-admin-alert {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid #bee5eb;
+}
+
+.registration-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.registration-col {
+    flex: 1;
+}
+
+.registration-input-group {
+    margin-bottom: 10px;
+}
+
+.registration-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1e3d58;
+}
+
+.registration-input {
+    width: 100%;
+    height: 40px;
+    padding: 12px 16px;
+    border: 2px solid #e8eef1;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.registration-input:focus {
+    border-color: #057dcd;
+    outline: none;
+}
+
+.registration-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e8eef1;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: white;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.registration-select:focus {
+    border-color: #057dcd;
+    outline: none;
+}
+
+.registration-hint {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.registration-date-group {
+    display: flex;
+    gap: 10px;
+}
+
+.registration-date-group .registration-select {
+    flex: 1;
+}
+
+.registration-submit-button {
+    width: 100%;
+    padding: 14px;
+    background-color: #057dcd;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.registration-submit-button:hover {
+    background-color: #0468a8;
+}
+
+.registration-login-prompt {
+    text-align: center;
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 24px;
+}
+
+.registration-login-link {
+    color: #057dcd;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.registration-features {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.registration-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.registration-feature-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #057dcd;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.registration-feature-text {
+    font-size: 14px;
+    color: #1e3d58;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .registration-container {
+        flex-direction: column;
+        max-width: 100%;
+    }
+
+    .registration-side,
+    .registration-card {
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+
+    .registration-side {
+        border-radius: 12px 12px 0 0;
+        padding: 30px 20px;
+    }
+
+    .registration-card {
+        border-radius: 0 0 12px 12px;
+        padding: 30px 20px;
+    }
+
+    .registration-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .registration-col {
+        margin-bottom: 20px;
+    }
+
+    .registration-date-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .registration-back-button {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 20px;
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .registration-background {
+        padding: 10px;
+    }
+
+    .registration-container {
+        padding: 0 10px;
+    }
+
+    .registration-card {
+        padding: 20px 15px;
+    }
+
+    .registration-title {
+        font-size: 24px;
+    }
+
+    .registration-side img {
+        width: 120px;
+    }
+
+    .registration-side h2 {
+        font-size: 20px;
+    }
+}
