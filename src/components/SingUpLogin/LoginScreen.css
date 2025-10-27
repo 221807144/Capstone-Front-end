@@ -1,0 +1,332 @@
+.login-background {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 20px;
+    overflow: hidden;
+    background-color: #e8eef1;
+}
+
+.login-background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../images/automate-logo.png');
+    background-size: cover;
+    background-position: center;
+    filter: blur(4px);
+    z-index: -1;
+    opacity: 0.3;
+}
+
+.login-back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    background-color: #057dcd;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 10;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+}
+
+.login-back-button:hover {
+    background-color: #0468a8;
+}
+
+.login-back-icon {
+    margin-right: 8px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 120vh;
+    max-height: 85vh;
+    padding: 0 20px;
+    z-index: 1;
+    display: flex;
+    margin-top: 40px;
+}
+
+.login-side{
+    width: 50%;
+    background-color: #0468a8;
+    border-radius: 12px 0 0 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-side img{
+    width: 150px;
+    margin: 20px;
+}
+
+.login-side h2{
+    text-align: center;
+    color: white;
+}
+
+.login-side p{
+    color: white;
+    width: 70%;
+    text-align: center;
+}
+
+.login-card {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 0 12px 12px 0;
+    box-shadow: 0 8px 32px rgba(30, 61, 88, 0.15);
+    padding: 40px 80px;
+    width: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-title {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #1e3d58;
+    text-align: center;
+}
+
+.login-subtitle {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 0;
+    line-height: 1.5;
+}
+
+.login-error-message {
+    background-color: #fee;
+    color: #c33;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    border: 1px solid #fcc;
+    text-align: center;
+}
+
+.login-input-group {
+    margin-bottom: 24px;
+}
+
+.login-password-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.login-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #1e3d58;
+}
+
+.login-input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid #e8eef1;
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: white;
+    transition: border-color 0.3s ease;
+    box-sizing: border-box;
+}
+
+.login-input:focus {
+    border-color: #057dcd;
+    outline: none;
+}
+
+.login-password-input-wrapper {
+    position: relative;
+}
+
+.login-toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #806b7b;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-forgot-password {
+    font-size: 13px;
+    color: #057dcd;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.login-remember-me {
+    display: flex;
+    align-items: center;
+    margin-bottom: 28px;
+}
+
+.login-checkbox {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    accent-color: #057dcd;
+    cursor: pointer;
+}
+
+.login-remember-label {
+    font-size: 14px;
+    color: #1e3d58;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.login-sign-in-button {
+    width: 100%;
+    padding: 14px;
+    background-color: #057dcd;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    /*margin-bottom: 24px;*/
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-sign-in-button:hover {
+    background-color: #0468a8;
+}
+
+.login-sign-up-section {
+    text-align: center;
+    margin-bottom: 32px;
+    padding: 20px 0;
+    border-bottom: 1px solid #e8eef1;
+}
+
+.login-sign-up-text {
+    font-size: 14px;
+    color: #666;
+    margin: 0;
+}
+
+.login-sign-up-link {
+    color: #057dcd;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.login-features {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.login-feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.login-feature-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #057dcd;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.login-feature-text {
+    font-size: 14px;
+    color: #1e3d58;
+    font-weight: 500;
+}
+
+.login-security-section {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid #e8eef1;
+}
+
+.login-security-note {
+    font-size: 12px;
+    color: #999;
+    line-height: 1.5;
+    margin: 0;
+    font-style: italic;
+}
+
+.login-footer {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.login-footer-text {
+    font-size: 12px;
+    color: #666;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 30px 20px;
+    }
+
+    .login-title {
+        font-size: 24px;
+    }
+
+    .login-back-button {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 20px;
+        align-self: flex-start;
+    }
+
+    .login-background {
+        padding: 10px;
+    }
+}
